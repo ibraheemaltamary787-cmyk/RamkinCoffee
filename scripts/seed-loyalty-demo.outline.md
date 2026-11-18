@@ -1,60 +1,58 @@
-# Seed / demo script outline — loyalty state machine (Phase 4)
+# Seed / demo script — loyalty state machine (Phase 7)
 
-Use this against a **staging** RAMKIN Firebase project only. Never point at `hloe-45d43`.
+Use against a **staging** RAMKIN Firebase project only. Never point at `hloe-45d43`. Never commit service-account JSON.
 
-## Prerequisites
+## Implementation
 
-1. Phase 3+ Functions deployed (`ensureCustomerProfile`, loyalty callables).
-2. OWNER bootstrapped; at least one STAFF (or use OWNER at the counter).
-3. Phone Auth test numbers **or** Auth Emulator with a fake customer phone.
-4. Admin SDK credentials via Application Default Credentials / gitignored service account (never commit).
+Runnable script: [`seed-loyalty-demo.local.ts`](./seed-loyalty-demo.local.ts)
+
+```bash
+# No Firebase required — prints the plan
+npx tsx scripts/seed-loyalty-demo.local.ts --dry-run
+
+# Staging (ADC / GOOGLE_APPLICATION_CREDENTIALS → RAMKIN project)
+npx tsx scripts/seed-loyalty-demo.local.ts --phone +15550109999 --n 3 --stop-at approved
+npx tsx scripts/seed-loyalty-demo.local.ts --phone +15550109999 --n 2 --stop-at redeemed --name "Demo Guest"
+```
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `--dry-run` | off | Print plan only; zero writes |
+| `--phone` | `+15550109999` | E.164 demo customer |
+| `--n` | `3` | Stamps / `requiredPurchases` for this combo (short demos) |
+| `--stop-at` | `approved` | `purchases` \| `requested` \| `approved` \| `redeemed` |
+| `--name` | `Demo Guest` | Display name |
+
+The script refuses `projectId === hloe-45d43`.
+
+## Prerequisites (non-dry-run)
+
+1. Phase 3+ Functions/rules available in the **same** project (or Admin SDK writes that mirror callables for demo data).  
+2. OWNER bootstrapped separately (`bootstrap-owner.local.ts` / `/bootstrap`).  
+3. Phone Auth test number **or** Auth user creatable by phone via Admin SDK.  
+4. Application Default Credentials for the RAMKIN project only.
 
 ## Goal fixture
 
-Create one demo customer and walk the full combo cycle so UAT can see:
+| Step | Actor | Action | Expected |
+|------|-------|--------|----------|
+| 0 | Script | users + customers + combo | `active`, count 0, QR token |
+| 1…N | Script | purchases + increments | After N: `completed` |
+| N+1 | Script optional | reward request | `reward_pending`, stamps unchanged |
+| N+2 | Script optional | approve | `reward_approved`, stamps unchanged |
+| N+3 | Script optional | redeem | Old `redeemed`; new `active` @ 0 |
 
-| Step | Actor    | Callable / action                                  | Expected combo status                                                                 |
-| ---- | -------- | -------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| 0    | System   | `ensureCustomerProfile`                            | `active`, `purchaseCount=0`, `settings.purchasesRequired` snapshotted (default **9**) |
-| 1…N  | Staff    | `recordPurchase` × N with unique `idempotencyKey`s | After N: `completed`                                                                  |
-| N+1  | Customer | `requestReward`                                    | `reward_pending` — **stamps unchanged**                                               |
-| N+2  | Manager  | `approveReward`                                    | `reward_approved` — **stamps unchanged**                                              |
-| N+3  | Staff    | `redeemReward`                                     | Old combo `redeemed`; **new** combo `active` @ 0                                      |
+Also exercise manually: reject path via admin UI (request → reject → re-request).
 
-Also demo: reject path (request → `rejectReward` with reason → combo back to `completed` → re-request).
+## Manual demo without seed
 
-## Suggested local script (future `scripts/seed-loyalty-demo.local.ts`)
-
-```ts
-// Pseudocode — implement when staging project exists.
-// npx tsx scripts/seed-loyalty-demo.local.ts --phone +15550109999 --n 3
-
-import { initializeApp, cert } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-
-// 1. ensure settings/loyalty { purchasesRequired: 9, staffCanApproveRewards: false }
-// 2. createOrGet Auth user with phone; set claim CUSTOMER
-// 3. write users/{uid} + customers/{uid} + first combos/{id} (mirror ensureCustomerProfile)
-// 4. for i in 1..N: create purchases/{idempotencyKey}, increment combo
-// 5. optionally create rewardRequests in requested|approved states for queue demos
-// 6. print: customerId, phone, qrToken, comboId, how to open admin Counter
-```
-
-## Manual demo without a seed script
-
-1. Customer app: register OTP → dashboard shows **0 / 9** gold progress.
-2. Admin Counter: lookup phone → **Record purchase** nine times (or temporarily set N=2 in Settings for a short demo).
-3. Customer: **Request reward** — progress text becomes pending; count still 9/9.
-4. Admin Rewards or Counter: **Approve** — still 9/9.
-5. Admin: **Confirm redeem** — customer dashboard resets to 0 / 9 on a new combo.
-6. Firestore: old `purchases` still queryable by previous `comboId`.
-
-## Idempotency / concurrency check
-
-- Submit `recordPurchase` twice with the **same** `idempotencyKey` → second returns `deduped: true`, count unchanged.
-- Two different keys in parallel on an almost-complete combo → transaction ensures only valid stamps land; completed combo rejects further stamps.
+1. Customer: register OTP → **0 / 9** (or lower N in Settings for new combos).  
+2. Counter: phone/QR → Record purchase × N.  
+3. Customer: Request reward — still N/N.  
+4. Approve — still N/N; Reject returns to completed.  
+5. Redeem — dashboard **0 / N**; history kept.  
+6. Same `idempotencyKey` twice → `deduped: true`.
 
 ## Cleanup
 
-Delete demo Auth users and related `customers` / `combos` / `purchases` / `rewardRequests` docs in staging, or use a disposable Firebase project.
+Delete demo Auth users and related Firestore docs in staging, or use a disposable RAMKIN project (never Hloe).
