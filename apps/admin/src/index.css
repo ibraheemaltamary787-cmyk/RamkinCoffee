@@ -1,0 +1,45 @@
+@import 'tailwindcss';
+
+:root {
+  --ramkin-black: #0a0a0a;
+  --ramkin-ink: #121212;
+  --ramkin-gold: #c9a962;
+  --ramkin-gold-soft: #e8d5a3;
+  --ramkin-cream: #f3efe6;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ramkin-cream);
+  background: linear-gradient(180deg, #0c0c0c 0%, #161616 100%);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out both;
+}

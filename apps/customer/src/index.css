@@ -1,0 +1,63 @@
+@import 'tailwindcss';
+
+:root {
+  --ramkin-black: #0a0a0a;
+  --ramkin-ink: #121212;
+  --ramkin-gold: #c9a962;
+  --ramkin-gold-soft: #e8d5a3;
+  --ramkin-cream: #f3efe6;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ramkin-cream);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201, 169, 98, 0.18), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(201, 169, 98, 0.08), transparent 50%),
+    linear-gradient(165deg, #050505 0%, #121212 45%, #0a0a0a 100%);
+  background-attachment: fixed;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gold-sheen {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s ease-out both;
+}
+
+.animate-gold-sheen {
+  animation: gold-sheen 3.5s ease-in-out infinite;
+}

@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Builds
+dist/
+build/
+lib/
+functions/lib/
+*.tsbuildinfo
+.vite/
+
+# Env / secrets — never commit real keys
+.env
+.env.local
+.env.*.local
+apps/*/.env
+apps/*/.env.local
+functions/.env
+*-firebase-adminsdk-*.json
+serviceAccount*.json
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+pubsub-debug.log
+
+# Logs / OS / IDE
+logs/
+*.log
+npm-debug.log*
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Misc
+*.local
+.turbo/
