@@ -6,7 +6,7 @@ node_modules/
 # Builds
 dist/
 build/
-lib/
+# Compiled Functions output only (do not ignore apps/*/src/services)
 functions/lib/
 *.tsbuildinfo
 .vite/

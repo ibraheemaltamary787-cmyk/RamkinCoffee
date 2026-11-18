@@ -1,19 +1,52 @@
-# OWNER bootstrap outline (Phase 3)
+# OWNER bootstrap (Phase 3)
 
-This is documentation only — no executable bootstrap ships in Phase 2.
+Custom claims are set **only** via Admin SDK (Cloud Functions). Clients never send `role`.
 
-## Intended flow
+## Prerequisites
 
-1. Create Auth user for Ibraheem (email/password) in the **RAMKIN** Firebase project.
-2. Using Admin SDK (Cloud Function or local script with service account **not** committed):
-   - `auth.setCustomUserClaims(uid, { role: 'OWNER' })`
-   - Upsert `users/{uid}` with role OWNER
-   - Write `activityLogs` entry `role.bootstrap_owner`
-3. Force token refresh on next login.
-4. Remove or lock the bootstrap entrypoint.
+1. Create a **new** RAMKIN Firebase project (never `hloe-45d43`).
+2. Enable Email/Password Auth.
+3. Create the owner Auth user (Console → Authentication → Add user) with Ibraheem’s email.
+4. Deploy Functions from this repo.
+5. Set the Functions secret (do **not** commit the value):
 
-## Guardrails
+   ```bash
+   firebase functions:secrets:set BOOTSTRAP_OWNER_SECRET
+   # enter a long random string (≥16 chars), then redeploy bootstrapOwner
+   ```
 
-- Reject if any `OWNER` already exists (unless emergency break-glass with dual control).
-- Never accept `role` from the client.
-- Never reuse Hloe credentials or project `hloe-45d43`.
+## Callable flow (recommended)
+
+1. Sign in to the **admin** app as the owner email/password user.
+2. Open browser console (or a temporary admin UI form) and call:
+
+   ```ts
+   import { getFunctions, httpsCallable } from 'firebase/functions';
+   const bootstrapOwner = httpsCallable(getFunctions(), 'bootstrapOwner');
+   await bootstrapOwner({ secret: '<same secret as BOOTSTRAP_OWNER_SECRET>' });
+   ```
+
+3. Force token refresh: `await auth.currentUser.getIdToken(true)`.
+4. Confirm custom claim `{ role: "OWNER" }` and `users/{uid}` doc.
+5. **Rotate or delete** `BOOTSTRAP_OWNER_SECRET` so the path cannot be reused.
+   Subsequent staff grants use `setStaffRole` (OWNER-only).
+
+## Guardrails (implemented)
+
+- Rejects if any `users` doc with `role == OWNER` already exists.
+- Requires authenticated caller with email.
+- Requires matching `BOOTSTRAP_OWNER_SECRET`.
+- Writes `activityLogs` action `role.bootstrap_owner`.
+- Never accepts `role` from the client body.
+
+## Local script alternative (outline)
+
+With Application Default Credentials / a **local** service-account JSON that is **gitignored**:
+
+```bash
+# Example only — do not commit keys
+GOOGLE_APPLICATION_CREDENTIALS=./secrets/ramkin-sa.json \
+  npx tsx scripts/bootstrap-owner.local.ts --uid <OWNER_UID>
+```
+
+`scripts/bootstrap-owner.local.ts` is a thin Admin SDK helper; prefer the callable in staging/production so the secret gate and “one OWNER” check stay centralized.
