@@ -1,8 +1,8 @@
 rules_version = '2';
 
-// RAMKIN Coffee — Phase 3 auth / RBAC rules.
-// Privileged writes (role, status, purchases, rewards, settings, activityLogs)
-// stay in Cloud Functions. Clients get narrow reads + no privileged fields.
+// RAMKIN Coffee — Phase 4 loyalty rules.
+// Privileged writes (purchases, rewards, settings, roles, activityLogs)
+// stay in Cloud Functions. Clients get narrow reads only.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -37,10 +37,7 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // Customers read own profile; staff can read for counter/admin shells.
       allow read: if isSelf(userId) || isStaff();
-
-      // No client writes — profile/role/status mutations go through Functions.
       allow create, update, delete: if false;
     }
 
@@ -49,22 +46,31 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
-    // Phase 4 collections remain deny-all for clients until engine ships.
     match /combos/{comboId} {
-      allow read: if false;
-      allow write: if false;
+      // Own combos for dashboard; staff for counter / queue.
+      allow read: if signedIn() && (
+        resource.data.customerId == uid() || isStaff()
+      );
+      allow create, update, delete: if false;
     }
 
     match /purchases/{purchaseId} {
-      allow read, write: if false;
+      allow read: if signedIn() && (
+        resource.data.customerId == uid() || isStaff()
+      );
+      allow create, update, delete: if false;
     }
 
     match /rewardRequests/{requestId} {
-      allow read, write: if false;
+      allow read: if signedIn() && (
+        resource.data.customerId == uid() || isStaff()
+      );
+      allow create, update, delete: if false;
     }
 
     match /settings/{docId} {
-      allow read: if isManagerOrOwner();
+      // Customers may read loyalty N for progress UI; writes via Functions only.
+      allow read: if signedIn();
       allow write: if false;
     }
 

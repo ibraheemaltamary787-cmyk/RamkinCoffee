@@ -9,6 +9,8 @@ import {
 } from '@ramkin/shared';
 import { requireAuth, setRoleClaim } from './claims';
 import { writeActivityLog } from './activity';
+import { ensureLoyaltySettingsDoc } from '../loyalty/settings';
+import { createActiveComboInTx } from '../loyalty/combo';
 
 function toIso(value: Timestamp | null | undefined): string | null {
   if (!value || typeof value.toDate !== 'function') return null;
@@ -46,13 +48,19 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
     `Guest ${phone.slice(-4)}`;
 
   const db = getFirestore();
+  const settings = await ensureLoyaltySettingsDoc(db);
   const userRef = db.collection('users').doc(auth.uid);
   const customerRef = db.collection('customers').doc(auth.uid);
 
   let created = false;
+  let comboCreated = false;
+  let currentComboId: string | null = null;
+  let qrToken: string | null = null;
 
   await db.runTransaction(async (tx) => {
     const existing = await tx.get(userRef);
+    const existingCustomer = await tx.get(customerRef);
+
     if (existing.exists) {
       const data = existing.data()!;
       if (data.status === 'disabled') {
@@ -73,19 +81,45 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
         },
         { merge: true },
       );
-      tx.set(
-        customerRef,
-        {
-          displayName,
-          phone,
-        },
-        { merge: true },
-      );
+
+      const customerData = existingCustomer.exists ? existingCustomer.data()! : {};
+      currentComboId = (customerData.currentComboId as string | null | undefined) ?? null;
+      qrToken = (customerData.qrToken as string | null | undefined) ?? null;
+
+      const customerPatch: Record<string, unknown> = {
+        displayName,
+        phone,
+      };
+
+      if (!qrToken) {
+        qrToken = createQrToken();
+        customerPatch.qrToken = qrToken;
+      }
+
+      if (!currentComboId) {
+        const createdCombo = createActiveComboInTx(tx, db, {
+          customerId: auth.uid,
+          requiredPurchases: settings.purchasesRequired,
+        });
+        currentComboId = createdCombo.comboId;
+        customerPatch.currentComboId = currentComboId;
+        comboCreated = true;
+      }
+
+      tx.set(customerRef, customerPatch, { merge: true });
       return;
     }
 
     created = true;
     const now = FieldValue.serverTimestamp();
+    qrToken = createQrToken();
+    const createdCombo = createActiveComboInTx(tx, db, {
+      customerId: auth.uid,
+      requiredPurchases: settings.purchasesRequired,
+    });
+    currentComboId = createdCombo.comboId;
+    comboCreated = true;
+
     tx.set(userRef, {
       role: 'CUSTOMER',
       displayName,
@@ -100,8 +134,8 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
       uid: auth.uid,
       phone,
       displayName,
-      qrToken: createQrToken(),
-      currentComboId: null,
+      qrToken,
+      currentComboId,
       totalPurchases: 0,
       totalRewardsRedeemed: 0,
       createdAt: now,
@@ -119,7 +153,11 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
       action: ACTIVITY_ACTIONS.ENSURE_CUSTOMER,
       entityType: 'user',
       entityId: auth.uid,
-      metadata: { phoneLast4: phone.slice(-4) },
+      metadata: {
+        phoneLast4: phone.slice(-4),
+        comboId: currentComboId,
+        comboCreated,
+      },
     });
   }
 
@@ -133,7 +171,15 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
     email: data.email ?? null,
     status: data.status ?? 'active',
     lastLoginAt: toIso(data.lastLoginAt),
+    currentComboId,
+    qrToken,
   };
 
-  return { ok: true as const, created, profile: dto, claimsRefreshRequired: created || !auth.role };
+  return {
+    ok: true as const,
+    created,
+    comboCreated,
+    profile: dto,
+    claimsRefreshRequired: created || !auth.role,
+  };
 });

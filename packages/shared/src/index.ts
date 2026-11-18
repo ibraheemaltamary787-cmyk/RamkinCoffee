@@ -1,53 +1,14 @@
 /** Shared types, schemas, and constants for RAMKIN Coffee apps + Functions. */
 
 import { z } from 'zod';
+import { DEFAULT_PURCHASES_REQUIRED, type Role, type UserStatus } from './constants';
 
-export const ROLES = ['OWNER', 'MANAGER', 'STAFF', 'CUSTOMER'] as const;
-export type Role = (typeof ROLES)[number];
-
-export const STAFF_ROLES = ['OWNER', 'MANAGER', 'STAFF'] as const;
-export type StaffRole = (typeof STAFF_ROLES)[number];
-
-export const USER_STATUSES = ['active', 'disabled'] as const;
-export type UserStatus = (typeof USER_STATUSES)[number];
-
-export const COMBO_STATUSES = [
-  'active',
-  'completed',
-  'reward_pending',
-  'reward_approved',
-  'redeemed',
-  'cancelled',
-] as const;
-export type ComboStatus = (typeof COMBO_STATUSES)[number];
-
-export const REWARD_REQUEST_STATUSES = ['requested', 'approved', 'rejected', 'redeemed'] as const;
-export type RewardRequestStatus = (typeof REWARD_REQUEST_STATUSES)[number];
-
-/** Default paid stamps before free drink (buy 9 → 10th free). */
-export const DEFAULT_PURCHASES_REQUIRED = 9;
-
-export const BRAND = {
-  name: 'RAMKIN',
-  product: 'RAMKIN Coffee',
-  tagline: 'Loyalty, refined.',
-} as const;
-
-/** Activity log action names used in Phase 3+. */
-export const ACTIVITY_ACTIONS = {
-  LOGIN: 'auth.login',
-  BOOTSTRAP_OWNER: 'role.bootstrap_owner',
-  SET_STAFF_ROLE: 'role.set_staff',
-  DISABLE_ACCOUNT: 'account.disable',
-  ENABLE_ACCOUNT: 'account.enable',
-  UPDATE_PROFILE: 'profile.update',
-  ENSURE_CUSTOMER: 'auth.ensure_customer',
-} as const;
-
-export type ActivityAction = (typeof ACTIVITY_ACTIONS)[keyof typeof ACTIVITY_ACTIONS];
+export * from './constants';
+export * from './loyalty';
 
 export interface LoyaltySettings {
   purchasesRequired: number;
+  staffCanApproveRewards?: boolean;
 }
 
 /** Firestore `users/{uid}` shape (timestamps as ISO strings on clients / DTOs). */
@@ -71,11 +32,13 @@ export interface CustomerProfileDto {
   email: string | null;
   status: UserStatus;
   lastLoginAt: string | null;
+  currentComboId?: string | null;
+  qrToken?: string | null;
 }
 
-export const roleSchema = z.enum(ROLES);
-export const staffRoleSchema = z.enum(STAFF_ROLES);
-export const userStatusSchema = z.enum(USER_STATUSES);
+export const roleSchema = z.enum(['OWNER', 'MANAGER', 'STAFF', 'CUSTOMER']);
+export const staffRoleSchema = z.enum(['OWNER', 'MANAGER', 'STAFF']);
+export const userStatusSchema = z.enum(['active', 'disabled']);
 
 export const ensureCustomerProfileSchema = z.object({
   displayName: z.string().trim().min(1).max(80).optional(),
@@ -111,7 +74,9 @@ export type BootstrapOwnerInput = z.infer<typeof bootstrapOwnerSchema>;
 export type SetStaffRoleInput = z.infer<typeof setStaffRoleSchema>;
 export type DisableAccountInput = z.infer<typeof disableAccountSchema>;
 
-export function isStaffRole(role: Role | string | null | undefined): role is StaffRole {
+export function isStaffRole(
+  role: Role | string | null | undefined,
+): role is 'OWNER' | 'MANAGER' | 'STAFF' {
   return role === 'OWNER' || role === 'MANAGER' || role === 'STAFF';
 }
 
@@ -145,6 +110,14 @@ export function isRewardEligible(
   requiredPurchases: number = DEFAULT_PURCHASES_REQUIRED,
 ): boolean {
   return purchaseCount >= requiredPurchases;
+}
+
+export function progressPercent(
+  purchaseCount: number,
+  requiredPurchases: number = DEFAULT_PURCHASES_REQUIRED,
+): number {
+  if (requiredPurchases <= 0) return 0;
+  return Math.min(100, Math.round((purchaseCount / requiredPurchases) * 100));
 }
 
 /** Generate an opaque QR token for customer counter lookup (Phase 4+). */
