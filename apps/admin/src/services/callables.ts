@@ -12,6 +12,7 @@ import type {
   CustomerLookupDto,
   DisableAccountInput,
   ExportReportInput,
+  RotateCustomerQrInput,
   ExportReportResult,
   GetCustomerDetailInput,
   ListActivityLogsInput,
@@ -65,6 +66,14 @@ export async function callDisableAccount(input: DisableAccountInput) {
     DisableAccountInput,
     { ok: true; uid: string; status: 'active' | 'disabled' }
   >(getFirebaseFunctions(), 'disableAccount');
+  return (await fn(input)).data;
+}
+
+export async function callRotateCustomerQr(input: RotateCustomerQrInput) {
+  const fn = httpsCallable<
+    RotateCustomerQrInput,
+    { ok: true; customerId: string; qrToken: string }
+  >(getFirebaseFunctions(), 'rotateCustomerQr');
   return (await fn(input)).data;
 }
 

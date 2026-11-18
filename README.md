@@ -11,9 +11,9 @@ apps/customer     Vite + React + TS + Tailwind — customer site (phone OTP + pr
 apps/admin        Vite + React + TS + Tailwind — staff / admin (counter, rewards, reports)
 packages/shared   Shared types, Zod schemas, loyalty state machine, report columns
 functions         Firebase Cloud Functions — auth + loyalty + export callables
-docs/             Security checklist, UAT script, staff training, backup runbook
+docs/             Launch checklist, ops runbook, UAT, security, handover
 firebase.json     Hosting + Functions + Firestore wiring
-firestore.rules   Phase 6 narrow reads; rateLimits denied; privileged writes via Functions
+firestore.rules   Narrow reads; rateLimits denied; privileged writes via Functions
 scripts/          OWNER bootstrap + loyalty seed (dry-run + staging ADC)
 ```
 
@@ -50,6 +50,18 @@ cp .env.example apps/admin/.env
 | `npm run lint`         | ESLint                                      |
 | `npm test`             | Unit tests (loyalty, RBAC, security hygiene)|
 | `npm run format`       | Prettier write                              |
+
+## Phase 8 — Production launch prep (docs + ops)
+
+| Artifact | Purpose |
+|----------|---------|
+| [`docs/PRODUCTION_LAUNCH_CHECKLIST.md`](docs/PRODUCTION_LAUNCH_CHECKLIST.md) | Firebase → Auth → deploy → Hosting → domains → App Check → OWNER → smoke |
+| [`docs/OPS_RUNBOOK.md`](docs/OPS_RUNBOOK.md) | Change N, invite staff, rotate QR, export, disable accounts, incidents |
+| [`docs/MONITORING_ALERTS.md`](docs/MONITORING_ALERTS.md) | Functions errors, Auth spikes, budgets — Console steps + YAML sketch |
+| [`docs/OWNER_HANDOVER.md`](docs/OWNER_HANDOVER.md) | What Ibraheem must set; no real secrets in repo |
+| Callable `rotateCustomerQr` | OWNER/MANAGER — invalidate leaked counter QR from customer detail |
+
+**Awaiting Firebase from Ibraheem.** Live Hosting / Auth / Functions deploy is blocked until a new RAMKIN project exists. This environment’s `.firebaserc` has `projects: {}` and Firebase CLI is not linked to any project (including not `hloe-45d43`).
 
 ## Phase 7 — Testing, UAT prep, security verification
 
@@ -137,6 +149,7 @@ Customer dashboard shows a scannable counter QR (official logo unchanged).
 | `getLoyaltySettings` / `updateLoyaltySettings` | any signed-in / OWNER               | Singleton `settings/loyalty` (`purchasesRequired` default **9**) |
 | `getLoyaltyProgress`                           | customer (or staff with id)         | Dashboard DTO                                                    |
 | `lookupCustomerByPhone` / `lookupCustomerByQr` | staff+                              | Counter lookup (QR rate-limited)                                 |
+| `rotateCustomerQr`                             | OWNER / MANAGER                     | Invalidate leaked counter QR                                     |
 | `recordPurchase`                               | staff+                              | Stamp with idempotency key                                       |
 | `requestReward`                                | customer                            | → `reward_pending`                                               |
 | `approveReward` / `rejectReward`               | manager/owner (staff if setting on) | No reset; reject needs reason                                    |
@@ -204,5 +217,5 @@ See `scripts/seed-loyalty-demo.outline.md` and `scripts/seed-loyalty-demo.local.
 | 4 Loyalty engine                       | On `main`                                   |
 | 5 Staff / admin product surfaces       | On `main`                                   |
 | 6 Reports / exports / hardening        | On `main`                                   |
-| 7 Testing / UAT prep / security verify | This branch (live Firebase still required)  |
-| 8 Production launch                    | Blocked on Phase 7 UAT + Firebase           |
+| 7 Testing / UAT prep / security verify | On `main` (live Firebase still required)    |
+| 8 Production launch prep / handover    | This branch — docs ready; **awaiting Firebase from Ibraheem** |

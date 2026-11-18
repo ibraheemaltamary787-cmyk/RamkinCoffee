@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import type { CustomerDetailDto } from '@ramkin/shared';
-import { callGetCustomerDetail } from '../services/callables';
+import { canRotateCustomerQr, type CustomerDetailDto } from '@ramkin/shared';
+import { useAuth } from '../auth/AuthContext';
+import { callGetCustomerDetail, callRotateCustomerQr } from '../services/callables';
 
 export function CustomerDetailPage() {
   const { customerId = '' } = useParams();
+  const { role } = useAuth();
   const [detail, setDetail] = useState<CustomerDetailDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rotating, setRotating] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!customerId) return;
@@ -27,6 +30,24 @@ export function CustomerDetailPage() {
     void refresh();
   }, [refresh]);
 
+  const onRotateQr = useCallback(async () => {
+    if (!customerId || !canRotateCustomerQr(role)) return;
+    const confirmed = window.confirm(
+      'Rotate this customer’s counter QR? Old printed codes and links will stop working immediately.',
+    );
+    if (!confirmed) return;
+    setRotating(true);
+    setError(null);
+    try {
+      await callRotateCustomerQr({ customerId });
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not rotate QR.');
+    } finally {
+      setRotating(false);
+    }
+  }, [customerId, refresh, role]);
+
   if (loading && !detail) {
     return <p className="text-sm text-[var(--ramkin-cream)]/45">Loading customer…</p>;
   }
@@ -44,6 +65,7 @@ export function CustomerDetailPage() {
 
   if (!detail) return null;
   const { customer, purchases, rewards, combos } = detail;
+  const mayRotate = canRotateCustomerQr(role);
 
   return (
     <section className="animate-fade-up customer-print-root space-y-8">
@@ -106,12 +128,24 @@ export function CustomerDetailPage() {
           <p className="mt-2 break-all font-mono text-xs text-[var(--ramkin-cream)]/70">
             {customer.qrToken || '—'}
           </p>
-          <Link
-            to={`/app/counter?qr=${encodeURIComponent(customer.qrToken)}`}
-            className="mt-3 inline-block text-xs tracking-[0.15em] text-[var(--ramkin-gold)] uppercase"
-          >
-            Open at counter →
-          </Link>
+          <div className="print:hidden mt-3 flex flex-wrap items-center gap-4">
+            <Link
+              to={`/app/counter?qr=${encodeURIComponent(customer.qrToken)}`}
+              className="text-xs tracking-[0.15em] text-[var(--ramkin-gold)] uppercase"
+            >
+              Open at counter →
+            </Link>
+            {mayRotate ? (
+              <button
+                type="button"
+                disabled={rotating}
+                onClick={() => void onRotateQr()}
+                className="border border-white/20 px-3 py-1.5 text-[10px] tracking-[0.2em] text-[var(--ramkin-cream)]/70 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-40"
+              >
+                {rotating ? 'Rotating…' : 'Rotate QR'}
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
 

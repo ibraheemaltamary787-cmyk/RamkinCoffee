@@ -3,9 +3,11 @@ import { describe, it } from 'node:test';
 import {
   canDisableAccounts,
   canManageStaffRoles,
+  canRotateCustomerQr,
   createQrToken,
   ensureCustomerProfileSchema,
   isStaffRole,
+  rotateCustomerQrSchema,
   setStaffRoleSchema,
   updateCustomerProfileSchema,
 } from './index';
@@ -18,10 +20,13 @@ describe('auth role helpers', () => {
     assert.equal(isStaffRole('CUSTOMER'), false);
   });
 
-  it('gates disable and staff-management capabilities', () => {
+  it('gates disable, QR rotate, and staff-management capabilities', () => {
     assert.equal(canDisableAccounts('OWNER'), true);
     assert.equal(canDisableAccounts('MANAGER'), true);
     assert.equal(canDisableAccounts('STAFF'), false);
+    assert.equal(canRotateCustomerQr('OWNER'), true);
+    assert.equal(canRotateCustomerQr('MANAGER'), true);
+    assert.equal(canRotateCustomerQr('STAFF'), false);
     assert.equal(canManageStaffRoles('OWNER'), true);
     assert.equal(canManageStaffRoles('MANAGER'), false);
   });
@@ -43,6 +48,11 @@ describe('auth schemas', () => {
 
   it('blocks OWNER assignment via setStaffRole schema', () => {
     assert.throws(() => setStaffRoleSchema.parse({ uid: 'u1', role: 'OWNER' }));
+  });
+
+  it('requires customerId for rotateCustomerQr', () => {
+    assert.equal(rotateCustomerQrSchema.parse({ customerId: 'cust-1' }).customerId, 'cust-1');
+    assert.throws(() => rotateCustomerQrSchema.parse({ customerId: '' }));
   });
 });
 
