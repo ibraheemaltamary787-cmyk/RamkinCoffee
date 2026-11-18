@@ -11,6 +11,8 @@ import type {
   CustomerListItemDto,
   CustomerLookupDto,
   DisableAccountInput,
+  ExportReportInput,
+  ExportReportResult,
   GetCustomerDetailInput,
   ListActivityLogsInput,
   ListCustomersInput,
@@ -234,6 +236,14 @@ export async function callAcceptStaffInvite(input: AcceptStaffInviteInput = {}) 
     AcceptStaffInviteInput,
     { ok: true; inviteId: string; role: string; claimsRefreshRequired: boolean }
   >(getFirebaseFunctions(), 'acceptStaffInvite');
+  return (await fn(input)).data;
+}
+
+export async function callExportReport(input: ExportReportInput = {}) {
+  const fn = httpsCallable<ExportReportInput, ExportReportResult>(
+    getFirebaseFunctions(),
+    'exportReport',
+  );
   return (await fn(input)).data;
 }
 

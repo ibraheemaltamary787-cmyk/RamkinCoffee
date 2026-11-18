@@ -6,6 +6,7 @@ import { DEFAULT_PURCHASES_REQUIRED, type Role, type UserStatus } from './consta
 export * from './constants';
 export * from './loyalty';
 export * from './admin';
+export * from './reports';
 
 export interface LoyaltySettings {
   purchasesRequired: number;

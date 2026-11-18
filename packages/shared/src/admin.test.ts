@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 import {
   canCreateStaffInvite,
   canViewActivityLogs,
+  canViewReports,
   customerMatchesQuery,
   createStaffInviteSchema,
   listPurchasesSchema,
@@ -24,6 +25,12 @@ describe('admin RBAC helpers', () => {
     assert.equal(canViewActivityLogs('OWNER'), true);
     assert.equal(canViewActivityLogs('MANAGER'), true);
     assert.equal(canViewActivityLogs('STAFF'), false);
+  });
+
+  it('gates reports nav to OWNER/MANAGER', () => {
+    assert.equal(canViewReports('OWNER'), true);
+    assert.equal(canViewReports('MANAGER'), true);
+    assert.equal(canViewReports('STAFF'), false);
   });
 });
 

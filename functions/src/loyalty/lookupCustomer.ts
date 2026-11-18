@@ -9,6 +9,8 @@ import {
 } from '@ramkin/shared';
 import { requireStaff } from '../auth/claims';
 import { writeActivityLog } from '../auth/activity';
+import { assertAppCheck } from '../security/appCheck';
+import { enforceRateLimit } from '../security/rateLimit';
 import { buildProgressDto, toLookupDto } from './progress';
 
 async function loadCustomerLookup(customerId: string) {
@@ -90,8 +92,16 @@ export const lookupCustomerByPhone = onCall({ cors: true }, async (request) => {
 });
 
 export const lookupCustomerByQr = onCall({ cors: true }, async (request) => {
+  assertAppCheck(request, 'lookupCustomerByQr');
   const staff = requireStaff(request);
   const input = lookupCustomerByQrSchema.parse(request.data ?? {});
+
+  await enforceRateLimit({
+    uid: staff.uid,
+    action: 'lookupCustomerByQr',
+    maxCalls: 60,
+    windowMs: 5 * 60 * 1000,
+  });
 
   const db = getFirestore();
   const match = await db

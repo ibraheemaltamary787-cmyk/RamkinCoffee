@@ -14,6 +14,7 @@ import { CustomersPage } from './pages/CustomersPage';
 import { CustomerDetailPage } from './pages/CustomerDetailPage';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { ActivityLogsPage } from './pages/ActivityLogsPage';
+import { ReportsPage } from './pages/ReportsPage';
 
 export default function App() {
   return (
@@ -43,6 +44,14 @@ export default function App() {
             <Route path="customers" element={<CustomersPage />} />
             <Route path="customers/:customerId" element={<CustomerDetailPage />} />
             <Route path="transactions" element={<TransactionsPage />} />
+            <Route
+              path="reports"
+              element={
+                <RequireStaff roles={['OWNER', 'MANAGER']}>
+                  <ReportsPage />
+                </RequireStaff>
+              }
+            />
             <Route
               path="settings"
               element={

@@ -50,6 +50,7 @@ export const ACTIVITY_ACTIONS = {
   STAFF_INVITE_CREATED: 'staff.invite_created',
   STAFF_INVITE_CANCELLED: 'staff.invite_cancelled',
   STAFF_INVITE_ACCEPTED: 'staff.invite_accepted',
+  REPORT_EXPORTED: 'report.exported',
 } as const;
 
 export type ActivityAction = (typeof ACTIVITY_ACTIONS)[keyof typeof ACTIVITY_ACTIONS];

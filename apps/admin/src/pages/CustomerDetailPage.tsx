@@ -46,24 +46,42 @@ export function CustomerDetailPage() {
   const { customer, purchases, rewards, combos } = detail;
 
   return (
-    <section className="animate-fade-up space-y-8">
+    <section className="animate-fade-up customer-print-root space-y-8">
       <div>
-        <Link
-          to="/app/customers"
-          className="text-xs tracking-[0.18em] text-[var(--ramkin-cream)]/45 uppercase hover:text-[var(--ramkin-gold)]"
-        >
-          ← Customers
-        </Link>
-        <h1
-          className="mt-3 text-3xl tracking-[0.08em] text-[var(--ramkin-gold)]"
-          style={{ fontFamily: 'var(--font-display)' }}
-        >
-          {customer.displayName || 'Customer'}
-        </h1>
-        <p className="mt-2 text-sm text-[var(--ramkin-cream)]/60">
-          {customer.phone ?? '—'} · {customer.status} · lifetime {customer.totalPurchases} purchases
-          · {customer.totalRewardsRedeemed} redeemed
-        </p>
+        <div className="print:hidden flex flex-wrap items-center justify-between gap-3">
+          <Link
+            to="/app/customers"
+            className="text-xs tracking-[0.18em] text-[var(--ramkin-cream)]/45 uppercase hover:text-[var(--ramkin-gold)]"
+          >
+            ← Customers
+          </Link>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="border border-white/20 px-3 py-1.5 text-[10px] tracking-[0.2em] text-[var(--ramkin-cream)]/70 uppercase hover:border-[var(--ramkin-gold)]/50"
+          >
+            Print history
+          </button>
+        </div>
+        <header className="mt-3 flex items-center gap-4">
+          <img
+            src="/brand/ramkin-logo.jpg"
+            alt="RAMKIN"
+            className="hidden h-12 w-12 rounded-full object-cover print:block"
+          />
+          <div>
+            <h1
+              className="text-3xl tracking-[0.08em] text-[var(--ramkin-gold)] print:text-black"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              {customer.displayName || 'Customer'}
+            </h1>
+            <p className="mt-2 text-sm text-[var(--ramkin-cream)]/60 print:text-black/70">
+              {customer.phone ?? '—'} · {customer.status} · lifetime {customer.totalPurchases}{' '}
+              purchases · {customer.totalRewardsRedeemed} redeemed
+            </p>
+          </div>
+        </header>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
