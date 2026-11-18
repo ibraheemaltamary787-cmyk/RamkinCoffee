@@ -1,10 +1,67 @@
+import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { BRAND, DEFAULT_PURCHASES_REQUIRED } from '@ramkin/shared';
+import {
+  BRAND,
+  DEFAULT_PURCHASES_REQUIRED,
+  progressPercent,
+  type LoyaltyProgressDto,
+} from '@ramkin/shared';
 import { BrandMark } from '../components/BrandMark';
 import { useAuth } from '../auth/AuthContext';
+import { callGetLoyaltyProgress, callRequestReward } from '../services/callables';
+
+function statusLabel(progress: LoyaltyProgressDto): string {
+  switch (progress.comboStatus) {
+    case 'completed':
+      return 'Reward ready — request your free drink';
+    case 'reward_pending':
+      return 'Reward requested — awaiting staff approval';
+    case 'reward_approved':
+      return 'Approved — show this at the counter to redeem';
+    case 'active':
+    default:
+      return progress.remaining === 1
+        ? '1 stamp remaining'
+        : `${progress.remaining} stamps remaining`;
+  }
+}
 
 export function DashboardPage() {
   const { loading, user, displayName, signOut, configured } = useAuth();
+  const [progress, setProgress] = useState<LoyaltyProgressDto | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    setError(null);
+    try {
+      const result = await callGetLoyaltyProgress();
+      setProgress(result.progress);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load loyalty progress.');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!configured || !user) return;
+    void refresh();
+  }, [configured, user, refresh]);
+
+  async function onRequestReward() {
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await callRequestReward();
+      setMessage('Reward requested. Stamps stay until staff redeem your free drink.');
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Request failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   if (!configured) {
     return (
@@ -30,6 +87,11 @@ export function DashboardPage() {
   if (!user) {
     return <Navigate to="/login" replace />;
   }
+
+  const purchaseCount = progress?.purchaseCount ?? 0;
+  const required = progress?.requiredPurchases ?? DEFAULT_PURCHASES_REQUIRED;
+  const pct = progressPercent(purchaseCount, required);
+  const canRequest = progress?.rewardEligible === true && !progress.openRewardRequestId;
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-lg px-6 py-10">
@@ -57,19 +119,66 @@ export function DashboardPage() {
 
       <section className="animate-fade-up border border-[var(--ramkin-gold)]/20 bg-black/30 p-6">
         <p className="text-sm text-[var(--ramkin-cream)]/60">Welcome</p>
-        <h1 className="mt-1 text-2xl text-[var(--ramkin-cream)]" style={{ fontFamily: 'var(--font-display)' }}>
+        <h1
+          className="mt-1 text-2xl text-[var(--ramkin-cream)]"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
           {displayName || user.phoneNumber || 'Guest'}
         </h1>
-        <p className="mt-4 text-sm leading-relaxed text-[var(--ramkin-cream)]/65">
-          Stamp progress arrives in Phase 4. For now this shell confirms your phone account is signed
-          in. Default card: buy {DEFAULT_PURCHASES_REQUIRED}, get the next free.
-        </p>
-        <div className="mt-6 h-2 w-full overflow-hidden bg-white/5">
-          <div className="h-full w-0 bg-[var(--ramkin-gold)] transition-all" />
+
+        <div className="mt-8">
+          <div className="flex items-end justify-between gap-3">
+            <p
+              className="text-4xl text-[var(--ramkin-gold)]"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              {purchaseCount}
+              <span className="text-lg text-[var(--ramkin-gold-soft)]/70"> / {required}</span>
+            </p>
+            <p className="max-w-[14rem] text-right text-xs leading-relaxed text-[var(--ramkin-cream)]/55">
+              {progress ? statusLabel(progress) : 'Loading stamp card…'}
+            </p>
+          </div>
+
+          <div className="mt-4 h-2.5 w-full overflow-hidden bg-white/5">
+            <div
+              className="animate-gold-sheen h-full bg-[var(--ramkin-gold)] transition-all duration-700 ease-out"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs tracking-[0.15em] text-[var(--ramkin-gold-soft)]/70 uppercase">
+            {progress?.remaining ?? required} remaining · buy {required} get next free
+          </p>
         </div>
-        <p className="mt-2 text-xs tracking-[0.15em] text-[var(--ramkin-gold-soft)]/70 uppercase">
-          0 / {DEFAULT_PURCHASES_REQUIRED} stamps
-        </p>
+
+        {progress?.qrToken ? (
+          <p className="mt-6 break-all text-[10px] tracking-[0.12em] text-[var(--ramkin-cream)]/35 uppercase">
+            Counter QR token · {progress.qrToken}
+          </p>
+        ) : null}
+
+        {error ? <p className="mt-4 text-sm text-red-300/90">{error}</p> : null}
+        {message ? <p className="mt-4 text-sm text-[var(--ramkin-gold-soft)]">{message}</p> : null}
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          {canRequest ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void onRequestReward()}
+              className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)]/15 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-gold)] uppercase transition hover:bg-[var(--ramkin-gold)]/25 disabled:opacity-50"
+            >
+              {busy ? 'Requesting…' : 'Request reward'}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="border border-white/15 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-cream)]/70 uppercase hover:border-[var(--ramkin-gold)]/40 hover:text-[var(--ramkin-gold)]"
+          >
+            Refresh
+          </button>
+        </div>
       </section>
 
       <nav className="mt-8 flex gap-4 text-sm">

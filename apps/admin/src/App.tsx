@@ -7,6 +7,9 @@ import { ShellLayout } from './pages/ShellLayout';
 import { OverviewPage } from './pages/OverviewPage';
 import { AccountsPage } from './pages/AccountsPage';
 import { BootstrapPage } from './pages/BootstrapPage';
+import { CounterPage } from './pages/CounterPage';
+import { RewardsPage } from './pages/RewardsPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 export default function App() {
   return (
@@ -31,6 +34,16 @@ export default function App() {
             }
           >
             <Route index element={<OverviewPage />} />
+            <Route path="counter" element={<CounterPage />} />
+            <Route path="rewards" element={<RewardsPage />} />
+            <Route
+              path="settings"
+              element={
+                <RequireStaff roles={['OWNER']}>
+                  <SettingsPage />
+                </RequireStaff>
+              }
+            />
             <Route
               path="accounts"
               element={

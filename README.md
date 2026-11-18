@@ -7,13 +7,13 @@ Greenfield monorepo. **Do not** reuse the Hloe app or Firebase project `hloe-45d
 ## Repository layout
 
 ```text
-apps/customer     Vite + React + TS + Tailwind — customer site (phone OTP)
-apps/admin        Vite + React + TS + Tailwind — staff / admin (email/password)
-packages/shared   Shared types, Zod schemas, role helpers
-functions         Firebase Cloud Functions (TypeScript) — auth callables
+apps/customer     Vite + React + TS + Tailwind — customer site (phone OTP + progress)
+apps/admin        Vite + React + TS + Tailwind — staff / admin (counter, rewards, settings)
+packages/shared   Shared types, Zod schemas, loyalty state machine
+functions         Firebase Cloud Functions — auth + loyalty callables
 firebase.json     Hosting + Functions + Firestore wiring
-firestore.rules   Phase 3 narrow reads; privileged writes denied to clients
-scripts/          OWNER bootstrap outline + local Admin SDK helper
+firestore.rules   Phase 4 narrow reads; privileged writes denied to clients
+scripts/          OWNER bootstrap + loyalty seed/demo outline
 ```
 
 Official brand mark (unmodified): `apps/customer/public/brand/ramkin-logo.jpg` (also under `apps/admin/public/brand/`).
@@ -47,73 +47,79 @@ cp .env.example apps/admin/.env
 | `npm run build:apps` | Build shared + both Vite apps |
 | `npm run typecheck` | Typecheck all packages |
 | `npm run lint` | ESLint |
-| `npm test` | Unit tests |
+| `npm test` | Unit tests (includes loyalty state machine) |
 | `npm run format` | Prettier write |
+
+## Phase 4 — Loyalty engine
+
+### Hard rules (enforced in `@ramkin/shared` + Functions transactions)
+
+1. **Customers never self-stamp** — only `recordPurchase` (staff+) creates purchases.
+2. **Combo resets only on `redeemReward`** — request/approve leave `purchaseCount` intact.
+3. **History preserved** — old combos/purchases/requests stay; redeem opens a **new** combo.
+4. **No duplicate open rewards** — one open request pointer per combo.
+5. **Idempotency** — `purchases/{idempotencyKey}` prevents double submits; Firestore transactions serialize concurrent stamps.
+
+### Callables
+
+| Callable | Who | Purpose |
+|----------|-----|---------|
+| `getLoyaltySettings` / `updateLoyaltySettings` | any signed-in / OWNER | Singleton `settings/loyalty` (`purchasesRequired` default **9**) |
+| `getLoyaltyProgress` | customer (or staff with id) | Dashboard DTO |
+| `lookupCustomerByPhone` / `lookupCustomerByQr` | staff+ | Counter lookup |
+| `recordPurchase` | staff+ | Stamp with idempotency key |
+| `requestReward` | customer | → `reward_pending` |
+| `approveReward` / `rejectReward` | manager/owner (staff if setting on) | No reset; reject needs reason |
+| `redeemReward` | staff+ | Confirm free drink → new combo |
+| `listOpenRewards` | staff+ | Queue for approve/redeem |
+
+Registration (`ensureCustomerProfile`) auto-creates the first active combo + QR token.
+
+### Demo the state machine
+
+1. Lower N for a short demo: admin **Settings** → `purchasesRequired: 2` (OWNER) — applies to **new** combos only.
+2. Customer registers → dashboard **0 / N** gold bar.
+3. Admin **Counter** → phone/QR lookup → **Record purchase** × N → combo `completed`.
+4. Customer **Request reward** → still N/N, status pending.
+5. Admin **Approve** → still N/N; **Reject** (with reason) returns to completed for re-request.
+6. Admin **Confirm redeem** → old combo `redeemed`, customer back at **0 / N**.
+7. Re-submit the same `idempotencyKey` → `deduped: true`.
+
+See `scripts/seed-loyalty-demo.outline.md` for a staging seed outline.
+
+### Security posture (Phase 4)
+
+- Client writes on purchases / combos / rewardRequests / settings / activityLogs: **denied**.
+- Customers may read own combos/purchases/requests; staff may read for counter.
+- Activity logs: `purchase.recorded`, `reward.*`, `settings.loyalty_updated`, `customer.lookup`.
 
 ## Phase 3 — Auth & RBAC
 
 ### Customer (phone OTP)
 
-1. Enable **Authentication → Phone** in the RAMKIN Firebase project (Blaze typically required for SMS).
-2. Or use **Auth Emulator** + `VITE_USE_FIREBASE_EMULATORS=true` for local OTP without SMS.
-3. Customer app routes: `/` · `/register` · `/login` · `/dashboard` · `/profile`.
-4. After OTP, the app calls `ensureCustomerProfile` (sets `CUSTOMER` claim + `users` / `customers` docs) and `recordLogin`.
+1. Enable **Authentication → Phone** (Blaze typically required for SMS) or Auth Emulator.
+2. Routes: `/` · `/register` · `/login` · `/dashboard` · `/profile`.
 
 ### Staff / admin (email + password)
 
 1. Enable **Email/Password** provider.
-2. Admin app: `/login` → role-gated `/app` shell; `/bootstrap` for first OWNER.
-3. Callables: `bootstrapOwner`, `setStaffRole`, `disableAccount`, `recordLogin`.
+2. Routes: `/login` → `/app` · `/app/counter` · `/app/rewards` · `/app/settings` · `/app/accounts` · `/bootstrap`.
 
 ### Bootstrap first OWNER
 
-1. Create the owner Auth user (Console → Authentication → Add user).
-2. Set the Functions secret (never commit; never put in Vite):
-
-   ```bash
-   firebase functions:secrets:set BOOTSTRAP_OWNER_SECRET
-   firebase deploy --only functions
-   ```
-
-3. Sign in on the admin app → you will be sent to `/bootstrap` until a staff claim exists.
-4. Paste the same secret → callable sets `{ role: "OWNER" }`, writes `users/{uid}`, logs `role.bootstrap_owner`.
-5. Force token refresh (automatic after success) and **rotate/delete** the secret.
-6. Optional local script: `npx tsx scripts/bootstrap-owner.local.ts --uid <UID>` with gitignored ADC/service account. See `scripts/bootstrap-owner.outline.md`.
-
-### Security posture (Phase 3)
-
-- Custom claims set **only** via Admin SDK in Functions.
-- Firestore: clients may **read** own `users`/`customers` (staff may read too); **all client writes denied**.
-- Profile updates, role changes, disable, login audit → callables + `activityLogs`.
-- Admin route hiding is UX only.
+1. Create the owner Auth user in Console.
+2. `firebase functions:secrets:set BOOTSTRAP_OWNER_SECRET` then deploy Functions.
+3. Admin `/bootstrap` with the secret → `{ role: "OWNER" }`.
+4. Rotate/delete the secret. Optional: `npx tsx scripts/bootstrap-owner.local.ts --uid <UID>`.
 
 ## Firebase project (owner steps)
 
-Phase 2/3 leave **placeholders** until a dedicated RAMKIN Firebase project exists.
+1. Create a **new** Firebase project (never `hloe-45d43`).
+2. Enable Auth (Phone + Email/Password), Firestore, Functions, Hosting.
+3. Copy public web config into app `.env` files (`VITE_FIREBASE_*` only).
+4. `firebase use --add` → deploy rules, indexes, functions.
 
-1. Open [Firebase Console](https://console.firebase.google.com/) as the RAMKIN owner.
-2. **Add project** → unique ID **except** `hloe-45d43`.
-3. Upgrade to **Blaze** when you need Phone Auth / production Functions.
-4. Enable Auth (Phone + Email/Password), Firestore, Functions, Hosting.
-5. Register web apps; copy public config into each app `.env` (`VITE_FIREBASE_*` only).
-6. `firebase use --add` → select the new project (`.firebaserc` ships empty on purpose).
-7. Deploy: `firebase deploy --only firestore:rules,firestore:indexes,functions`
-
-**Hard rules**
-
-- Never point `.firebaserc` at `hloe-45d43`.
-- Never commit service-account JSON or private keys.
-- `.env.example` documents **public** Vite keys only; `BOOTSTRAP_OWNER_SECRET` is Functions-only.
-
-## What works with placeholders vs needs Console
-
-| Capability | Placeholders / CI | Needs real Firebase |
-|------------|-------------------|---------------------|
-| Typecheck / lint / test / build | ✓ | — |
-| Auth UI flows (forms, routing, branding) | ✓ | Live Auth to complete OTP / email sign-in |
-| Phone OTP SMS | — | Phone provider + Blaze (or Auth Emulator) |
-| Custom claims / callables | Code present | Deploy Functions + secrets |
-| Firestore reads of profile | Rules ready | Deploy rules + create docs via callables |
+**Hard rules:** never commit service-account JSON; never put `BOOTSTRAP_OWNER_SECRET` in Vite env.
 
 ## Phase status
 
@@ -121,5 +127,6 @@ Phase 2/3 leave **placeholders** until a dedicated RAMKIN Firebase project exist
 |-------|--------|
 | 1 Docs / architecture | Approved |
 | 2 Repo + tooling + Firebase foundation | On `main` |
-| 3 Auth / RBAC | This branch |
-| 4 Loyalty engine | Not started |
+| 3 Auth / RBAC | On `main` |
+| 4 Loyalty engine | This branch |
+| 5+ Admin polish / reports | Not started |

@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { BRAND, canDisableAccounts, canManageStaffRoles } from '@ramkin/shared';
+import { BRAND, canDisableAccounts, canManageStaffRoles, canUpdateLoyaltySettings } from '@ramkin/shared';
 import { useAuth } from '../auth/AuthContext';
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -36,9 +36,20 @@ export function ShellLayout() {
             <NavLink to="/app" end className={linkClass}>
               Overview
             </NavLink>
+            <NavLink to="/app/counter" className={linkClass}>
+              Counter
+            </NavLink>
+            <NavLink to="/app/rewards" className={linkClass}>
+              Rewards
+            </NavLink>
             {(canManageStaffRoles(role) || canDisableAccounts(role)) && (
               <NavLink to="/app/accounts" className={linkClass}>
                 Accounts
+              </NavLink>
+            )}
+            {canUpdateLoyaltySettings(role) && (
+              <NavLink to="/app/settings" className={linkClass}>
+                Settings
               </NavLink>
             )}
             <NavLink to="/bootstrap" className={linkClass}>
