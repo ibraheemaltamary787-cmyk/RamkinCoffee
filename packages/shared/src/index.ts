@@ -69,12 +69,17 @@ export const disableAccountSchema = z.object({
   disabled: z.boolean().default(true),
 });
 
+export const rotateCustomerQrSchema = z.object({
+  customerId: z.string().min(1),
+});
+
 export type EnsureCustomerProfileInput = z.infer<typeof ensureCustomerProfileSchema>;
 export type UpdateCustomerProfileInput = z.infer<typeof updateCustomerProfileSchema>;
 export type RecordLoginInput = z.infer<typeof recordLoginSchema>;
 export type BootstrapOwnerInput = z.infer<typeof bootstrapOwnerSchema>;
 export type SetStaffRoleInput = z.infer<typeof setStaffRoleSchema>;
 export type DisableAccountInput = z.infer<typeof disableAccountSchema>;
+export type RotateCustomerQrInput = z.infer<typeof rotateCustomerQrSchema>;
 
 export function isStaffRole(
   role: Role | string | null | undefined,
@@ -88,6 +93,11 @@ export function isCustomerRole(role: Role | string | null | undefined): boolean 
 
 /** OWNER and MANAGER may disable accounts (server still authoritative). */
 export function canDisableAccounts(role: Role | string | null | undefined): boolean {
+  return role === 'OWNER' || role === 'MANAGER';
+}
+
+/** OWNER and MANAGER may rotate a customer's counter QR token. */
+export function canRotateCustomerQr(role: Role | string | null | undefined): boolean {
   return role === 'OWNER' || role === 'MANAGER';
 }
 

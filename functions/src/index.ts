@@ -18,7 +18,7 @@ export const helloRamkin = onCall({ cors: true }, () => {
     ok: true as const,
     brand: BRAND.name,
     message: 'RAMKIN Cloud Functions foundation is live.',
-    phase: 6,
+    phase: 8,
   };
 });
 
@@ -31,6 +31,7 @@ export { disableAccount } from './auth/disableAccount';
 
 export { recordPurchase } from './loyalty/recordPurchase';
 export { lookupCustomerByPhone, lookupCustomerByQr } from './loyalty/lookupCustomer';
+export { rotateCustomerQr } from './loyalty/rotateCustomerQr';
 export { requestReward } from './loyalty/requestReward';
 export { approveReward } from './loyalty/approveReward';
 export { rejectReward } from './loyalty/rejectReward';

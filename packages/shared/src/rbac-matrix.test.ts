@@ -8,6 +8,7 @@ import {
   canManageStaffRoles,
   canRecordPurchases,
   canRedeemRewards,
+  canRotateCustomerQr,
   canUpdateLoyaltySettings,
   canViewActivityLogs,
   canViewAdminStats,
@@ -34,6 +35,7 @@ const EXPECTED: Record<
   viewActivity: { OWNER: true, MANAGER: true, STAFF: false, CUSTOMER: false },
   viewAdminStats: { OWNER: true, MANAGER: true, STAFF: true, CUSTOMER: false },
   disableAccounts: { OWNER: true, MANAGER: true, STAFF: false, CUSTOMER: false },
+  rotateCustomerQr: { OWNER: true, MANAGER: true, STAFF: false, CUSTOMER: false },
   manageStaffRoles: { OWNER: true, MANAGER: false, STAFF: false, CUSTOMER: false },
   inviteStaff: { OWNER: true, MANAGER: true, STAFF: false, CUSTOMER: false },
   inviteManager: { OWNER: true, MANAGER: false, STAFF: false, CUSTOMER: false },
@@ -66,6 +68,7 @@ describe('Architecture RBAC capability matrix', () => {
     check('viewActivity', (r) => canViewActivityLogs(r));
     check('viewAdminStats', (r) => canViewAdminStats(r));
     check('disableAccounts', (r) => canDisableAccounts(r));
+    check('rotateCustomerQr', (r) => canRotateCustomerQr(r));
     check('manageStaffRoles', (r) => canManageStaffRoles(r));
     check('inviteStaff', (r) => canCreateStaffInvite(r, 'STAFF'));
     check('inviteManager', (r) => canCreateStaffInvite(r, 'MANAGER'));
