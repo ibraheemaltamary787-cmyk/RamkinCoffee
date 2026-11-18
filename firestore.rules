@@ -1,8 +1,9 @@
 rules_version = '2';
 
-// RAMKIN Coffee — Phase 5 admin surfaces.
-// Privileged writes (purchases, rewards, settings, roles, invites, activityLogs)
-// stay in Cloud Functions. Clients get narrow reads only.
+// RAMKIN Coffee — Phase 6 hardening.
+// Privileged writes (purchases, rewards, settings, roles, invites, activityLogs,
+// exports, rateLimits) stay in Cloud Functions. Clients get narrow reads only.
+// See docs/SECURITY_RULES_REVIEW.md for the checklist.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -32,12 +33,9 @@ service cloud.firestore {
       return claimRole() in ['OWNER', 'MANAGER'];
     }
 
-    function isOwner() {
-      return claimRole() == 'OWNER';
-    }
-
     match /users/{userId} {
       allow read: if isSelf(userId) || isStaff();
+      // Role / status / email mutations only via Admin SDK callables.
       allow create, update, delete: if false;
     }
 
@@ -47,7 +45,6 @@ service cloud.firestore {
     }
 
     match /combos/{comboId} {
-      // Own combos for dashboard; staff for counter / queue.
       allow read: if signedIn() && (
         resource.data.customerId == uid() || isStaff()
       );
@@ -75,13 +72,18 @@ service cloud.firestore {
     }
 
     match /staffInvites/{inviteId} {
-      allow read: if isOwner() || isManagerOrOwner();
+      allow read: if isManagerOrOwner();
       allow write: if false;
     }
 
     match /activityLogs/{logId} {
       allow read: if isManagerOrOwner();
       allow write: if false;
+    }
+
+    // Server-side rate limit ledger — never client-readable.
+    match /rateLimits/{docId} {
+      allow read, write: if false;
     }
 
     match /{document=**} {

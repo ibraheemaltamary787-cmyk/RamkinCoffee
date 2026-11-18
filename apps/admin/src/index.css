@@ -65,3 +65,28 @@ body {
 input[type='date'] {
   color-scheme: dark;
 }
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  header.print\:hidden {
+    display: none !important;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .customer-print-root,
+  .report-print-root {
+    animation: none !important;
+  }
+}

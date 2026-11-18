@@ -5,6 +5,7 @@ import {
   canManageStaffRoles,
   canUpdateLoyaltySettings,
   canViewActivityLogs,
+  canViewReports,
 } from '@ramkin/shared';
 import { useAuth } from '../auth/AuthContext';
 
@@ -20,7 +21,7 @@ export function ShellLayout() {
 
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-white/10 bg-black/50 px-6 py-4 backdrop-blur-sm">
+      <header className="print:hidden border-b border-white/10 bg-black/50 px-6 py-4 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <img
@@ -56,6 +57,11 @@ export function ShellLayout() {
             <NavLink to="/app/transactions" className={linkClass}>
               Transactions
             </NavLink>
+            {canViewReports(role) && (
+              <NavLink to="/app/reports" className={linkClass}>
+                Reports
+              </NavLink>
+            )}
             {(canManageStaffRoles(role) || canDisableAccounts(role)) && (
               <NavLink to="/app/accounts" className={linkClass}>
                 Staff
@@ -84,7 +90,7 @@ export function ShellLayout() {
           </nav>
         </div>
       </header>
-      <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mx-auto max-w-6xl px-6 py-8 print:max-w-none print:px-0 print:py-0">
         <Outlet />
       </div>
     </div>

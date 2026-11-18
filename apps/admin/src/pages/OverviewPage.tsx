@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { AdminStatsDto } from '@ramkin/shared';
+import { canViewReports, type AdminStatsDto } from '@ramkin/shared';
 import { useAuth } from '../auth/AuthContext';
 import { callGetAdminStats } from '../services/callables';
 
@@ -92,7 +92,7 @@ export function OverviewPage() {
         </dl>
       ) : null}
 
-      <div className="mt-10 grid gap-3 sm:grid-cols-3">
+      <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Link
           to="/app/counter"
           className="border border-white/10 bg-black/30 p-4 transition hover:border-[var(--ramkin-gold)]/40"
@@ -120,6 +120,17 @@ export function OverviewPage() {
           </p>
           <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">Search · history →</p>
         </Link>
+        {canViewReports(role) ? (
+          <Link
+            to="/app/reports"
+            className="border border-white/10 bg-black/30 p-4 transition hover:border-[var(--ramkin-gold)]/40"
+          >
+            <p className="text-xs tracking-[0.2em] text-[var(--ramkin-cream)]/45 uppercase">
+              Reports
+            </p>
+            <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">Excel · PDF · print →</p>
+          </Link>
+        ) : null}
       </div>
     </section>
   );

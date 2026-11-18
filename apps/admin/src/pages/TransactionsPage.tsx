@@ -46,8 +46,11 @@ export function TransactionsPage() {
         Transactions
       </h1>
       <p className="mt-2 text-sm text-[var(--ramkin-cream)]/60">
-        Purchase history with optional customer, staff, and date filters. Excel/PDF export is Phase
-        6.
+        Purchase history with optional customer, staff, and date filters. For Excel/PDF, use{' '}
+        <Link to="/app/reports" className="text-[var(--ramkin-gold)] hover:underline">
+          Reports
+        </Link>
+        .
       </p>
 
       <form

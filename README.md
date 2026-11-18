@@ -8,15 +8,16 @@ Greenfield monorepo. **Do not** reuse the Hloe app or Firebase project `hloe-45d
 
 ```text
 apps/customer     Vite + React + TS + Tailwind — customer site (phone OTP + progress)
-apps/admin        Vite + React + TS + Tailwind — staff / admin (counter, rewards, settings)
-packages/shared   Shared types, Zod schemas, loyalty state machine
-functions         Firebase Cloud Functions — auth + loyalty callables
+apps/admin        Vite + React + TS + Tailwind — staff / admin (counter, rewards, reports)
+packages/shared   Shared types, Zod schemas, loyalty state machine, report columns
+functions         Firebase Cloud Functions — auth + loyalty + export callables
+docs/             Security review + OWNER backup/export runbook
 firebase.json     Hosting + Functions + Firestore wiring
-firestore.rules   Phase 5 narrow reads; privileged writes denied to clients
+firestore.rules   Phase 6 narrow reads; rateLimits denied; privileged writes via Functions
 scripts/          OWNER bootstrap + loyalty seed/demo outline
 ```
 
-Official brand mark (unmodified): `apps/customer/public/brand/ramkin-logo.jpg` (also under `apps/admin/public/brand/`).
+Official brand mark (unmodified): `apps/customer/public/brand/ramkin-logo.jpg` (also under `apps/admin/public/brand/` and `functions/assets/brand/` for PDF — binary copy only, not redrawn).
 
 ## Prerequisites
 
@@ -47,8 +48,34 @@ cp .env.example apps/admin/.env
 | `npm run build:apps`   | Build shared + both Vite apps               |
 | `npm run typecheck`    | Typecheck all packages                      |
 | `npm run lint`         | ESLint                                      |
-| `npm test`             | Unit tests (includes loyalty state machine) |
+| `npm test`             | Unit tests (loyalty + report builders)      |
 | `npm run format`       | Prettier write                              |
+
+## Phase 6 — Reporting, exports, and hardening
+
+| Route / artifact                         | Who             | Purpose                                              |
+| ---------------------------------------- | --------------- | ---------------------------------------------------- |
+| `/app/reports`                           | OWNER / MANAGER | Date / status / search filters; Excel + PDF + print  |
+| Customer detail **Print history**        | staff+          | Print-friendly individual history                    |
+| Callable `exportReport`                  | OWNER / MANAGER | Authorized data → xlsx / pdf / json preview          |
+| `docs/SECURITY_RULES_REVIEW.md`          | ops             | Rules matrix + penetration-style checklist           |
+| `docs/OWNER_BACKUP_EXPORT.md`            | OWNER           | Backup / export runbook                             |
+| App Check stubs + `rateLimits`           | platform        | Soft until Console setup; QR + export throttles      |
+
+### Export callable
+
+| Callable       | Who             | Purpose                                                                 |
+| -------------- | --------------- | ----------------------------------------------------------------------- |
+| `exportReport` | OWNER / MANAGER | Filters: `from`, `to`, `search`, `recordedBy`, `rewardStatus`, `sheets` |
+
+Excel sheets use real headers (`Customer ID`, `Display Name`, `Purchase ID`, …). PDF embeds the official logo from `functions/assets/brand/ramkin-logo.jpg`.
+
+### App Check (Console required)
+
+1. Firebase Console → App Check → register customer + admin web apps (reCAPTCHA v3).
+2. Set public site key in app `.env` as `VITE_FIREBASE_APPCHECK_SITE_KEY`.
+3. Enforce in Console, then set Functions env `ENFORCE_APP_CHECK=true`.
+4. Until then, Auth + RBAC + Firestore rate limits still apply.
 
 ## Phase 5 — Staff / admin product surfaces
 
@@ -61,6 +88,7 @@ Admin routes (role-gated UX; Functions remain authoritative):
 | `/app/rewards`      | staff+          | Open rewards queue (approve / reject / redeem)          |
 | `/app/customers`    | staff+          | Search + customer detail / history                      |
 | `/app/transactions` | staff+          | Purchase list + filters                                 |
+| `/app/reports`      | OWNER / MANAGER | Excel / PDF / print (Phase 6)                           |
 | `/app/accounts`     | OWNER / MANAGER | Staff list, invites, role assign, disable               |
 | `/app/settings`     | OWNER           | `purchasesRequired` + staff-can-approve                 |
 | `/app/activity`     | OWNER / MANAGER | Activity log viewer                                     |
@@ -95,7 +123,7 @@ Customer dashboard shows a scannable counter QR (official logo unchanged).
 | ---------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------- |
 | `getLoyaltySettings` / `updateLoyaltySettings` | any signed-in / OWNER               | Singleton `settings/loyalty` (`purchasesRequired` default **9**) |
 | `getLoyaltyProgress`                           | customer (or staff with id)         | Dashboard DTO                                                    |
-| `lookupCustomerByPhone` / `lookupCustomerByQr` | staff+                              | Counter lookup                                                   |
+| `lookupCustomerByPhone` / `lookupCustomerByQr` | staff+                              | Counter lookup (QR rate-limited)                                 |
 | `recordPurchase`                               | staff+                              | Stamp with idempotency key                                       |
 | `requestReward`                                | customer                            | → `reward_pending`                                               |
 | `approveReward` / `rejectReward`               | manager/owner (staff if setting on) | No reset; reject needs reason                                    |
@@ -116,11 +144,13 @@ Registration (`ensureCustomerProfile`) auto-creates the first active combo + QR 
 
 See `scripts/seed-loyalty-demo.outline.md` for a staging seed outline.
 
-### Security posture (Phase 4)
+### Security posture
 
-- Client writes on purchases / combos / rewardRequests / settings / activityLogs: **denied**.
+- Client writes on purchases / combos / rewardRequests / settings / activityLogs / rateLimits: **denied**.
 - Customers may read own combos/purchases/requests; staff may read for counter.
-- Activity logs: `purchase.recorded`, `reward.*`, `settings.loyalty_updated`, `customer.lookup`.
+- Activity logs: `purchase.recorded`, `reward.*`, `settings.loyalty_updated`, `customer.lookup`, `report.exported`.
+- Full checklist: [`docs/SECURITY_RULES_REVIEW.md`](docs/SECURITY_RULES_REVIEW.md).
+- OWNER backup steps: [`docs/OWNER_BACKUP_EXPORT.md`](docs/OWNER_BACKUP_EXPORT.md).
 
 ## Phase 3 — Auth & RBAC
 
@@ -132,7 +162,7 @@ See `scripts/seed-loyalty-demo.outline.md` for a staging seed outline.
 ### Staff / admin (email + password)
 
 1. Enable **Email/Password** provider.
-2. Routes: `/login` → `/app` · counter · rewards · customers · transactions · accounts · settings · activity · `/bootstrap`.
+2. Routes: `/login` → `/app` · counter · rewards · customers · transactions · reports · accounts · settings · activity · `/bootstrap`.
 
 ### Bootstrap first OWNER
 
@@ -147,6 +177,7 @@ See `scripts/seed-loyalty-demo.outline.md` for a staging seed outline.
 2. Enable Auth (Phone + Email/Password), Firestore, Functions, Hosting.
 3. Copy public web config into app `.env` files (`VITE_FIREBASE_*` only).
 4. `firebase use --add` → deploy rules, indexes, functions.
+5. (Phase 6+) enroll App Check; optional Firestore scheduled export — see OWNER runbook.
 
 **Hard rules:** never commit service-account JSON; never put `BOOTSTRAP_OWNER_SECRET` in Vite env.
 
@@ -158,5 +189,6 @@ See `scripts/seed-loyalty-demo.outline.md` for a staging seed outline.
 | 2 Repo + tooling + Firebase foundation | On `main`   |
 | 3 Auth / RBAC                          | On `main`   |
 | 4 Loyalty engine                       | On `main`   |
-| 5 Staff / admin product surfaces       | This branch |
-| 6+ Reports / harden / launch           | Not started |
+| 5 Staff / admin product surfaces       | On `main`   |
+| 6 Reports / exports / hardening         | This branch |
+| 7+ UAT / launch                        | Not started |

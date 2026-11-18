@@ -208,6 +208,11 @@ export function canViewAdminStats(role: Role | string | null | undefined): boole
   return role === 'OWNER' || role === 'MANAGER' || role === 'STAFF';
 }
 
+/** Reports nav / export UX gate (server still authoritative via `canExportReports`). */
+export function canViewReports(role: Role | string | null | undefined): boolean {
+  return role === 'OWNER' || role === 'MANAGER';
+}
+
 export function normalizeSearchQuery(query: string): string {
   return query.trim().toLowerCase();
 }

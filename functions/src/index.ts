@@ -18,7 +18,7 @@ export const helloRamkin = onCall({ cors: true }, () => {
     ok: true as const,
     brand: BRAND.name,
     message: 'RAMKIN Cloud Functions foundation is live.',
-    phase: 5,
+    phase: 6,
   };
 });
 
@@ -51,3 +51,6 @@ export {
   cancelStaffInvite,
   acceptStaffInvite,
 } from './admin/staffInvites';
+
+export { exportReport } from './reports/exportReport';
+export { APP_CHECK_SETUP_NOTES } from './security/appCheck';
