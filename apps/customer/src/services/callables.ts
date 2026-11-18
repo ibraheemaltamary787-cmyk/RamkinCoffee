@@ -8,9 +8,7 @@ import type {
 } from '@ramkin/shared';
 import { getFirebaseFunctions } from './firebase';
 
-export async function callEnsureCustomerProfile(
-  input: EnsureCustomerProfileInput = {},
-): Promise<{
+export async function callEnsureCustomerProfile(input: EnsureCustomerProfileInput = {}): Promise<{
   ok: true;
   created: boolean;
   comboCreated?: boolean;
@@ -50,7 +48,10 @@ export async function callRecordLogin(): Promise<void> {
   await fn({ client: 'customer' });
 }
 
-export async function callGetLoyaltyProgress(): Promise<{ ok: true; progress: LoyaltyProgressDto }> {
+export async function callGetLoyaltyProgress(): Promise<{
+  ok: true;
+  progress: LoyaltyProgressDto;
+}> {
   const fn = httpsCallable<Record<string, never>, { ok: true; progress: LoyaltyProgressDto }>(
     getFirebaseFunctions(),
     'getLoyaltyProgress',
@@ -59,9 +60,7 @@ export async function callGetLoyaltyProgress(): Promise<{ ok: true; progress: Lo
   return result.data;
 }
 
-export async function callRequestReward(
-  input: RequestRewardInput = {},
-): Promise<{
+export async function callRequestReward(input: RequestRewardInput = {}): Promise<{
   ok: true;
   requestId: string;
   comboId: string;

@@ -259,10 +259,7 @@ export function applyRequestReward(combo: ComboSnapshot): RequestRewardTransitio
     );
   }
   if (combo.purchaseCount < combo.requiredPurchases) {
-    throw new LoyaltyTransitionError(
-      'combo_not_completed',
-      'Not enough purchases for a reward.',
-    );
+    throw new LoyaltyTransitionError('combo_not_completed', 'Not enough purchases for a reward.');
   }
   if (combo.rewardRequestId) {
     throw new LoyaltyTransitionError(
@@ -440,11 +437,7 @@ export function simulateFullLoyaltyCycle(requiredPurchases: number = DEFAULT_PUR
   const afterApprove = combo.status;
   const stampsAfterApprove = combo.purchaseCount;
 
-  const redeemed = applyRedeemReward(
-    combo,
-    { ...reward, status: 'approved' },
-    requiredPurchases,
-  );
+  const redeemed = applyRedeemReward(combo, { ...reward, status: 'approved' }, requiredPurchases);
 
   return {
     afterPurchases,

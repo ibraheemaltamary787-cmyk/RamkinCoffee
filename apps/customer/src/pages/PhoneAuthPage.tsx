@@ -1,10 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  type ConfirmationResult,
-} from 'firebase/auth';
+import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth';
 import { BRAND } from '@ramkin/shared';
 import { BrandMark } from '../components/BrandMark';
 import { useAuth } from '../auth/AuthContext';
@@ -136,7 +132,11 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
       </div>
 
       {step === 'phone' ? (
-        <form onSubmit={sendCode} className="animate-fade-up space-y-4" style={{ animationDelay: '80ms' }}>
+        <form
+          onSubmit={sendCode}
+          className="animate-fade-up space-y-4"
+          style={{ animationDelay: '80ms' }}
+        >
           {mode === 'register' && (
             <label className="block text-left text-sm text-[var(--ramkin-cream)]/80">
               Name

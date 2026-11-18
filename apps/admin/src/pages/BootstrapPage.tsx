@@ -51,9 +51,9 @@ export function BootstrapPage() {
         OWNER bootstrap
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ramkin-cream)]/65">
-        Current claim: <span className="text-[var(--ramkin-gold)]">{role ?? 'none'}</span>. Paste the
-        Functions secret <code>BOOTSTRAP_OWNER_SECRET</code> (never a Vite env). One-shot — locked once an
-        OWNER document exists. Prefer rotating the secret afterward.
+        Current claim: <span className="text-[var(--ramkin-gold)]">{role ?? 'none'}</span>. Paste
+        the Functions secret <code>BOOTSTRAP_OWNER_SECRET</code> (never a Vite env). One-shot —
+        locked once an OWNER document exists. Prefer rotating the secret afterward.
       </p>
 
       <form onSubmit={onSubmit} className="mt-6 space-y-3">

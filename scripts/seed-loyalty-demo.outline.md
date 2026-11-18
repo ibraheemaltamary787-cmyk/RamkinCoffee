@@ -13,13 +13,13 @@ Use this against a **staging** RAMKIN Firebase project only. Never point at `hlo
 
 Create one demo customer and walk the full combo cycle so UAT can see:
 
-| Step | Actor | Callable / action | Expected combo status |
-|------|-------|-------------------|------------------------|
-| 0 | System | `ensureCustomerProfile` | `active`, `purchaseCount=0`, `settings.purchasesRequired` snapshotted (default **9**) |
-| 1…N | Staff | `recordPurchase` × N with unique `idempotencyKey`s | After N: `completed` |
-| N+1 | Customer | `requestReward` | `reward_pending` — **stamps unchanged** |
-| N+2 | Manager | `approveReward` | `reward_approved` — **stamps unchanged** |
-| N+3 | Staff | `redeemReward` | Old combo `redeemed`; **new** combo `active` @ 0 |
+| Step | Actor    | Callable / action                                  | Expected combo status                                                                 |
+| ---- | -------- | -------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 0    | System   | `ensureCustomerProfile`                            | `active`, `purchaseCount=0`, `settings.purchasesRequired` snapshotted (default **9**) |
+| 1…N  | Staff    | `recordPurchase` × N with unique `idempotencyKey`s | After N: `completed`                                                                  |
+| N+1  | Customer | `requestReward`                                    | `reward_pending` — **stamps unchanged**                                               |
+| N+2  | Manager  | `approveReward`                                    | `reward_approved` — **stamps unchanged**                                              |
+| N+3  | Staff    | `redeemReward`                                     | Old combo `redeemed`; **new** combo `active` @ 0                                      |
 
 Also demo: reject path (request → `rejectReward` with reason → combo back to `completed` → re-request).
 

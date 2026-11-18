@@ -31,10 +31,7 @@ export const redeemReward = onCall({ cors: true }, async (request) => {
     const comboRef = db.collection('combos').doc(rewardData.comboId);
     const customerRef = db.collection('customers').doc(customerId);
 
-    const [comboSnap, customerSnap] = await Promise.all([
-      tx.get(comboRef),
-      tx.get(customerRef),
-    ]);
+    const [comboSnap, customerSnap] = await Promise.all([tx.get(comboRef), tx.get(customerRef)]);
     if (!comboSnap.exists) {
       throw new HttpsError('not-found', 'Combo not found.');
     }

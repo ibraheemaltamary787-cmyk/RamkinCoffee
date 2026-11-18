@@ -1,10 +1,18 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { BRAND, canDisableAccounts, canManageStaffRoles, canUpdateLoyaltySettings } from '@ramkin/shared';
+import {
+  BRAND,
+  canDisableAccounts,
+  canManageStaffRoles,
+  canUpdateLoyaltySettings,
+  canViewActivityLogs,
+} from '@ramkin/shared';
 import { useAuth } from '../auth/AuthContext';
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `text-sm tracking-[0.12em] uppercase ${
-    isActive ? 'text-[var(--ramkin-gold)]' : 'text-[var(--ramkin-cream)]/50 hover:text-[var(--ramkin-gold-soft)]'
+    isActive
+      ? 'text-[var(--ramkin-gold)]'
+      : 'text-[var(--ramkin-cream)]/50 hover:text-[var(--ramkin-gold-soft)]'
   }`;
 
 export function ShellLayout() {
@@ -12,12 +20,12 @@ export function ShellLayout() {
 
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-white/10 bg-black/40 px-6 py-4">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
+      <header className="border-b border-white/10 bg-black/50 px-6 py-4 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <img
               src="/brand/ramkin-logo.jpg"
-              alt=""
+              alt="RAMKIN"
               className="h-10 w-10 rounded-full object-cover ring-1 ring-[var(--ramkin-gold)]/40"
             />
             <div>
@@ -32,7 +40,7 @@ export function ShellLayout() {
               </p>
             </div>
           </div>
-          <nav className="flex flex-wrap items-center gap-5">
+          <nav className="flex flex-wrap items-center gap-4">
             <NavLink to="/app" end className={linkClass}>
               Overview
             </NavLink>
@@ -42,14 +50,25 @@ export function ShellLayout() {
             <NavLink to="/app/rewards" className={linkClass}>
               Rewards
             </NavLink>
+            <NavLink to="/app/customers" className={linkClass}>
+              Customers
+            </NavLink>
+            <NavLink to="/app/transactions" className={linkClass}>
+              Transactions
+            </NavLink>
             {(canManageStaffRoles(role) || canDisableAccounts(role)) && (
               <NavLink to="/app/accounts" className={linkClass}>
-                Accounts
+                Staff
               </NavLink>
             )}
             {canUpdateLoyaltySettings(role) && (
               <NavLink to="/app/settings" className={linkClass}>
                 Settings
+              </NavLink>
+            )}
+            {canViewActivityLogs(role) && (
+              <NavLink to="/app/activity" className={linkClass}>
+                Activity
               </NavLink>
             )}
             <NavLink to="/bootstrap" className={linkClass}>
@@ -65,7 +84,7 @@ export function ShellLayout() {
           </nav>
         </div>
       </header>
-      <div className="mx-auto max-w-5xl px-6 py-8">
+      <div className="mx-auto max-w-6xl px-6 py-8">
         <Outlet />
       </div>
     </div>

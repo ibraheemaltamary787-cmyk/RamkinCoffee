@@ -10,6 +10,10 @@ import { BootstrapPage } from './pages/BootstrapPage';
 import { CounterPage } from './pages/CounterPage';
 import { RewardsPage } from './pages/RewardsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { CustomersPage } from './pages/CustomersPage';
+import { CustomerDetailPage } from './pages/CustomerDetailPage';
+import { TransactionsPage } from './pages/TransactionsPage';
+import { ActivityLogsPage } from './pages/ActivityLogsPage';
 
 export default function App() {
   return (
@@ -36,6 +40,9 @@ export default function App() {
             <Route index element={<OverviewPage />} />
             <Route path="counter" element={<CounterPage />} />
             <Route path="rewards" element={<RewardsPage />} />
+            <Route path="customers" element={<CustomersPage />} />
+            <Route path="customers/:customerId" element={<CustomerDetailPage />} />
+            <Route path="transactions" element={<TransactionsPage />} />
             <Route
               path="settings"
               element={
@@ -49,6 +56,14 @@ export default function App() {
               element={
                 <RequireStaff roles={['OWNER', 'MANAGER']}>
                   <AccountsPage />
+                </RequireStaff>
+              }
+            />
+            <Route
+              path="activity"
+              element={
+                <RequireStaff roles={['OWNER', 'MANAGER']}>
+                  <ActivityLogsPage />
                 </RequireStaff>
               }
             />

@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { CustomerLookupDto } from '@ramkin/shared';
+import { QrScanner } from '../components/QrScanner';
 import {
   callApproveReward,
   callLookupByPhone,
@@ -11,7 +13,8 @@ import {
 } from '../services/callables';
 
 export function CounterPage() {
-  const [mode, setMode] = useState<'phone' | 'qr'>('phone');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [mode, setMode] = useState<'phone' | 'qr' | 'scan'>('phone');
   const [query, setQuery] = useState('');
   const [customer, setCustomer] = useState<CustomerLookupDto | null>(null);
   const [busy, setBusy] = useState(false);
@@ -19,12 +22,38 @@ export function CounterPage() {
   const [note, setNote] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
 
-  async function refreshCustomer(current: CustomerLookupDto) {
+  const refreshCustomer = useCallback(async (current: CustomerLookupDto) => {
     if (current.phone) {
       return (await callLookupByPhone(current.phone)).customer;
     }
     return (await callLookupByQr(current.qrToken)).customer;
-  }
+  }, []);
+
+  const lookupQr = useCallback(async (token: string) => {
+    setBusy(true);
+    setError(null);
+    setNote(null);
+    try {
+      const result = await callLookupByQr(token.trim());
+      setCustomer(result.customer);
+      setQuery(token.trim());
+      setMode('qr');
+      setNote('Customer loaded from QR.');
+    } catch (err) {
+      setCustomer(null);
+      setError(err instanceof Error ? err.message : 'Lookup failed.');
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const qr = searchParams.get('qr');
+    if (qr) {
+      void lookupQr(qr);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams, lookupQr]);
 
   async function onLookup(e: React.FormEvent) {
     e.preventDefault();
@@ -132,55 +161,65 @@ export function CounterPage() {
         Counter
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-[var(--ramkin-cream)]/60">
-        Look up a customer by phone or QR token, record a purchase, and handle reward
-        approve / reject / redeem. Customers never self-stamp.
+        Look up by phone, paste a QR token, or scan the customer’s dashboard QR. Record purchases
+        and handle reward approve / reject / redeem. Customers never self-stamp.
       </p>
 
-      <form onSubmit={(e) => void onLookup(e)} className="mt-8 flex flex-wrap items-end gap-3">
-        <div className="flex gap-2">
+      <div className="mt-8 flex flex-wrap gap-2">
+        {(
+          [
+            ['phone', 'Phone'],
+            ['qr', 'QR token'],
+            ['scan', 'Scan camera'],
+          ] as const
+        ).map(([value, label]) => (
           <button
+            key={value}
             type="button"
-            onClick={() => setMode('phone')}
+            onClick={() => setMode(value)}
             className={`px-3 py-2 text-xs tracking-[0.15em] uppercase ${
-              mode === 'phone'
+              mode === value
                 ? 'border border-[var(--ramkin-gold)] text-[var(--ramkin-gold)]'
                 : 'border border-white/15 text-[var(--ramkin-cream)]/50'
             }`}
           >
-            Phone
+            {label}
           </button>
-          <button
-            type="button"
-            onClick={() => setMode('qr')}
-            className={`px-3 py-2 text-xs tracking-[0.15em] uppercase ${
-              mode === 'qr'
-                ? 'border border-[var(--ramkin-gold)] text-[var(--ramkin-gold)]'
-                : 'border border-white/15 text-[var(--ramkin-cream)]/50'
-            }`}
-          >
-            QR token
-          </button>
+        ))}
+      </div>
+
+      {mode === 'scan' ? (
+        <div className="mt-6 max-w-md">
+          <QrScanner
+            active={mode === 'scan' && !busy}
+            onScan={(token) => {
+              if (!busy) void lookupQr(token);
+            }}
+          />
         </div>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={mode === 'phone' ? '+15550100200' : '32-char qr token'}
-          className="min-w-[16rem] flex-1 border border-white/15 bg-black/40 px-3 py-2 text-sm text-[var(--ramkin-cream)] outline-none focus:border-[var(--ramkin-gold)]/50"
-        />
-        <button
-          type="submit"
-          disabled={busy || !query.trim()}
-          className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)]/10 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-gold)] uppercase disabled:opacity-50"
-        >
-          Lookup
-        </button>
-      </form>
+      ) : (
+        <form onSubmit={(e) => void onLookup(e)} className="mt-6 flex flex-wrap items-end gap-3">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={mode === 'phone' ? '+15550100200' : '32-char qr token'}
+            className="min-w-[16rem] flex-1 border border-white/15 bg-black/40 px-3 py-2 text-sm text-[var(--ramkin-cream)] outline-none focus:border-[var(--ramkin-gold)]/50"
+          />
+          <button
+            type="submit"
+            disabled={busy || !query.trim()}
+            className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)]/10 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-gold)] uppercase disabled:opacity-50"
+          >
+            Lookup
+          </button>
+        </form>
+      )}
 
       {error ? <p className="mt-4 text-sm text-red-300/90">{error}</p> : null}
       {note ? <p className="mt-4 text-sm text-[var(--ramkin-gold-soft)]">{note}</p> : null}
 
       {customer ? (
-        <div className="mt-8 border border-white/10 bg-black/30 p-5">
+        <div className="mt-8 border border-[var(--ramkin-gold)]/20 bg-black/35 p-5 shadow-[0_0_40px_rgba(201,169,98,0.06)]">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-lg text-[var(--ramkin-cream)]">{customer.displayName}</p>

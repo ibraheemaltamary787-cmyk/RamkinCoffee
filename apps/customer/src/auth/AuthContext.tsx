@@ -7,11 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import {
-  onAuthStateChanged,
-  signOut as firebaseSignOut,
-  type User,
-} from 'firebase/auth';
+import { onAuthStateChanged, signOut as firebaseSignOut, type User } from 'firebase/auth';
 import type { Role } from '@ramkin/shared';
 import { getFirebaseAuth, isFirebaseConfigured } from '../services/firebase';
 import { callEnsureCustomerProfile, callRecordLogin } from '../services/callables';

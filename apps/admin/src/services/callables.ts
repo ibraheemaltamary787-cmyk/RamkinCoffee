@@ -1,19 +1,38 @@
 import { httpsCallable } from 'firebase/functions';
 import type {
+  AcceptStaffInviteInput,
+  ActivityLogDto,
+  AdminStatsDto,
   ApproveRewardInput,
   BootstrapOwnerInput,
+  CancelStaffInviteInput,
+  CreateStaffInviteInput,
+  CustomerDetailDto,
+  CustomerListItemDto,
   CustomerLookupDto,
   DisableAccountInput,
+  GetCustomerDetailInput,
+  ListActivityLogsInput,
+  ListCustomersInput,
+  ListPurchasesInput,
+  ListStaffInput,
+  ListStaffInvitesInput,
+  PurchaseListItemDto,
   RecordPurchaseInput,
   RedeemRewardInput,
   RejectRewardInput,
   SetStaffRoleInput,
+  StaffInviteDto,
+  StaffMemberDto,
   UpdateLoyaltySettingsInput,
 } from '@ramkin/shared';
 import { getFirebaseFunctions } from './firebase';
 
 export async function callRecordLogin(): Promise<void> {
-  const fn = httpsCallable<{ client: 'admin' }, { ok: true }>(getFirebaseFunctions(), 'recordLogin');
+  const fn = httpsCallable<{ client: 'admin' }, { ok: true }>(
+    getFirebaseFunctions(),
+    'recordLogin',
+  );
   await fn({ client: 'admin' });
 }
 
@@ -136,6 +155,86 @@ export async function callUpdateLoyaltySettings(input: UpdateLoyaltySettingsInpu
     ok: true;
     settings: { purchasesRequired: number; staffCanApproveRewards: boolean };
   };
+}
+
+export async function callGetAdminStats() {
+  const fn = httpsCallable<Record<string, never>, { ok: true; stats: AdminStatsDto }>(
+    getFirebaseFunctions(),
+    'getAdminStats',
+  );
+  return (await fn({})).data;
+}
+
+export async function callListCustomers(input: ListCustomersInput = {}) {
+  const fn = httpsCallable<ListCustomersInput, { ok: true; customers: CustomerListItemDto[] }>(
+    getFirebaseFunctions(),
+    'listCustomers',
+  );
+  return (await fn(input)).data;
+}
+
+export async function callGetCustomerDetail(input: GetCustomerDetailInput) {
+  const fn = httpsCallable<GetCustomerDetailInput, { ok: true; detail: CustomerDetailDto }>(
+    getFirebaseFunctions(),
+    'getCustomerDetail',
+  );
+  return (await fn(input)).data;
+}
+
+export async function callListPurchases(input: ListPurchasesInput = {}) {
+  const fn = httpsCallable<ListPurchasesInput, { ok: true; purchases: PurchaseListItemDto[] }>(
+    getFirebaseFunctions(),
+    'listPurchases',
+  );
+  return (await fn(input)).data;
+}
+
+export async function callListActivityLogs(input: ListActivityLogsInput = {}) {
+  const fn = httpsCallable<ListActivityLogsInput, { ok: true; logs: ActivityLogDto[] }>(
+    getFirebaseFunctions(),
+    'listActivityLogs',
+  );
+  return (await fn(input)).data;
+}
+
+export async function callListStaff(input: ListStaffInput = {}) {
+  const fn = httpsCallable<ListStaffInput, { ok: true; staff: StaffMemberDto[] }>(
+    getFirebaseFunctions(),
+    'listStaff',
+  );
+  return (await fn(input)).data;
+}
+
+export async function callCreateStaffInvite(input: CreateStaffInviteInput) {
+  const fn = httpsCallable<CreateStaffInviteInput, { ok: true; invite: StaffInviteDto }>(
+    getFirebaseFunctions(),
+    'createStaffInvite',
+  );
+  return (await fn(input)).data;
+}
+
+export async function callListStaffInvites(input: ListStaffInvitesInput = {}) {
+  const fn = httpsCallable<ListStaffInvitesInput, { ok: true; invites: StaffInviteDto[] }>(
+    getFirebaseFunctions(),
+    'listStaffInvites',
+  );
+  return (await fn(input)).data;
+}
+
+export async function callCancelStaffInvite(input: CancelStaffInviteInput) {
+  const fn = httpsCallable<
+    CancelStaffInviteInput,
+    { ok: true; inviteId: string; status: 'cancelled' }
+  >(getFirebaseFunctions(), 'cancelStaffInvite');
+  return (await fn(input)).data;
+}
+
+export async function callAcceptStaffInvite(input: AcceptStaffInviteInput = {}) {
+  const fn = httpsCallable<
+    AcceptStaffInviteInput,
+    { ok: true; inviteId: string; role: string; claimsRefreshRequired: boolean }
+  >(getFirebaseFunctions(), 'acceptStaffInvite');
+  return (await fn(input)).data;
 }
 
 export function newIdempotencyKey(): string {

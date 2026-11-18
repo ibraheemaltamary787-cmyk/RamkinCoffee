@@ -13,15 +13,20 @@ export const setStaffRole = onCall({ cors: true }, async (request) => {
     throw new HttpsError('invalid-argument', 'Cannot change your own role via this callable.');
   }
 
-  const authUser = await getAuth().getUser(input.uid).catch(() => {
-    throw new HttpsError('not-found', 'Auth user not found.');
-  });
+  const authUser = await getAuth()
+    .getUser(input.uid)
+    .catch(() => {
+      throw new HttpsError('not-found', 'Auth user not found.');
+    });
 
   const db = getFirestore();
   const userRef = db.collection('users').doc(input.uid);
   const existing = await userRef.get();
   if (existing.exists && existing.data()?.role === 'OWNER') {
-    throw new HttpsError('permission-denied', 'Cannot demote or reassign an OWNER via this callable.');
+    throw new HttpsError(
+      'permission-denied',
+      'Cannot demote or reassign an OWNER via this callable.',
+    );
   }
 
   await setRoleClaim(input.uid, input.role);

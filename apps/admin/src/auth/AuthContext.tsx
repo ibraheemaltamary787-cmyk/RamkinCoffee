@@ -72,23 +72,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsub();
   }, [configured]);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    if (!configured) {
-      throw new Error('Firebase not configured');
-    }
-    const cred = await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
-    const nextRole = await readRole(cred.user);
-    setUser(cred.user);
-    setRole(nextRole);
-    if (isStaffRole(nextRole)) {
-      try {
-        await callRecordLogin();
-      } catch {
-        // Best-effort until Functions are live.
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      if (!configured) {
+        throw new Error('Firebase not configured');
       }
-    }
-    return nextRole;
-  }, [configured]);
+      const cred = await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+      const nextRole = await readRole(cred.user);
+      setUser(cred.user);
+      setRole(nextRole);
+      if (isStaffRole(nextRole)) {
+        try {
+          await callRecordLogin();
+        } catch {
+          // Best-effort until Functions are live.
+        }
+      }
+      return nextRole;
+    },
+    [configured],
+  );
 
   const signOut = useCallback(async () => {
     if (!configured) return;

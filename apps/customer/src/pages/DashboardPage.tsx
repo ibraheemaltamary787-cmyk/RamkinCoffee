@@ -7,6 +7,7 @@ import {
   type LoyaltyProgressDto,
 } from '@ramkin/shared';
 import { BrandMark } from '../components/BrandMark';
+import { CustomerQr } from '../components/CustomerQr';
 import { useAuth } from '../auth/AuthContext';
 import { callGetLoyaltyProgress, callRequestReward } from '../services/callables';
 
@@ -117,7 +118,7 @@ export function DashboardPage() {
         </button>
       </header>
 
-      <section className="animate-fade-up border border-[var(--ramkin-gold)]/20 bg-black/30 p-6">
+      <section className="animate-fade-up border border-[var(--ramkin-gold)]/25 bg-black/40 p-6 shadow-[0_0_50px_rgba(201,169,98,0.08)]">
         <p className="text-sm text-[var(--ramkin-cream)]/60">Welcome</p>
         <h1
           className="mt-1 text-2xl text-[var(--ramkin-cream)]"
@@ -151,12 +152,6 @@ export function DashboardPage() {
           </p>
         </div>
 
-        {progress?.qrToken ? (
-          <p className="mt-6 break-all text-[10px] tracking-[0.12em] text-[var(--ramkin-cream)]/35 uppercase">
-            Counter QR token · {progress.qrToken}
-          </p>
-        ) : null}
-
         {error ? <p className="mt-4 text-sm text-red-300/90">{error}</p> : null}
         {message ? <p className="mt-4 text-sm text-[var(--ramkin-gold-soft)]">{message}</p> : null}
 
@@ -180,6 +175,23 @@ export function DashboardPage() {
           </button>
         </div>
       </section>
+
+      {progress?.qrToken ? (
+        <section
+          className="animate-fade-up mt-8 border border-white/10 bg-black/30 p-6 text-center"
+          style={{ animationDelay: '120ms' }}
+        >
+          <h2 className="text-xs tracking-[0.22em] text-[var(--ramkin-gold-soft)] uppercase">
+            Counter QR
+          </h2>
+          <p className="mx-auto mt-2 max-w-sm text-xs text-[var(--ramkin-cream)]/50">
+            Staff scan this code to look you up — never used to self-stamp.
+          </p>
+          <div className="mt-5 flex justify-center">
+            <CustomerQr token={progress.qrToken} />
+          </div>
+        </section>
+      ) : null}
 
       <nav className="mt-8 flex gap-4 text-sm">
         <Link to="/profile" className="text-[var(--ramkin-gold)] hover:underline">

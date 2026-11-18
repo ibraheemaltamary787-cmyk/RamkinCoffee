@@ -38,19 +38,22 @@ async function main(): Promise<void> {
   await getAuth().setCustomUserClaims(uid, { role: 'OWNER' });
 
   const now = FieldValue.serverTimestamp();
-  await db.collection('users').doc(uid).set(
-    {
-      role: 'OWNER',
-      displayName: user.displayName?.trim() || user.email.split('@')[0],
-      phone: user.phoneNumber ?? null,
-      email: user.email,
-      status: 'active',
-      createdAt: now,
-      updatedAt: now,
-      lastLoginAt: null,
-    },
-    { merge: true },
-  );
+  await db
+    .collection('users')
+    .doc(uid)
+    .set(
+      {
+        role: 'OWNER',
+        displayName: user.displayName?.trim() || user.email.split('@')[0],
+        phone: user.phoneNumber ?? null,
+        email: user.email,
+        status: 'active',
+        createdAt: now,
+        updatedAt: now,
+        lastLoginAt: null,
+      },
+      { merge: true },
+    );
 
   await db.collection('activityLogs').add({
     actorUid: uid,

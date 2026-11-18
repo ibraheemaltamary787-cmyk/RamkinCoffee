@@ -89,7 +89,10 @@ export function ProfilePage() {
       {message && <p className="mt-4 text-sm text-[var(--ramkin-gold-soft)]">{message}</p>}
       {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
 
-      <Link to="/dashboard" className="mt-8 inline-block text-sm text-[var(--ramkin-gold)] hover:underline">
+      <Link
+        to="/dashboard"
+        className="mt-8 inline-block text-sm text-[var(--ramkin-gold)] hover:underline"
+      >
         ← Dashboard
       </Link>
     </main>
