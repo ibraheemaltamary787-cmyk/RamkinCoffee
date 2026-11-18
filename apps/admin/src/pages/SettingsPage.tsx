@@ -54,7 +54,8 @@ export function SettingsPage() {
         Loyalty settings
       </h1>
       <p className="mt-2 text-sm text-[var(--ramkin-cream)]/60">
-        Default is buy 9, 10th free. Changing N only affects <em>new</em> combos (snapshot on start).
+        Default is buy 9, 10th free. Changing N only affects <em>new</em> combos (snapshot on
+        start).
       </p>
 
       <form onSubmit={(e) => void onSave(e)} className="mt-8 space-y-5">
@@ -92,12 +93,16 @@ export function SettingsPage() {
             {busy ? 'Saving…' : 'Save settings'}
           </button>
         ) : (
-          <p className="text-xs text-[var(--ramkin-cream)]/45">Only OWNER can change these values.</p>
+          <p className="text-xs text-[var(--ramkin-cream)]/45">
+            Only OWNER can change these values.
+          </p>
         )}
       </form>
 
       {error ? <p className="mt-4 text-sm text-red-300/90">{error}</p> : null}
-      {saved ? <p className="mt-4 text-sm text-[var(--ramkin-gold-soft)]">Settings saved.</p> : null}
+      {saved ? (
+        <p className="mt-4 text-sm text-[var(--ramkin-gold-soft)]">Settings saved.</p>
+      ) : null}
     </section>
   );
 }

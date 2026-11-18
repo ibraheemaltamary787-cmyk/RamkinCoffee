@@ -12,7 +12,7 @@ apps/admin        Vite + React + TS + Tailwind — staff / admin (counter, rewar
 packages/shared   Shared types, Zod schemas, loyalty state machine
 functions         Firebase Cloud Functions — auth + loyalty callables
 firebase.json     Hosting + Functions + Firestore wiring
-firestore.rules   Phase 4 narrow reads; privileged writes denied to clients
+firestore.rules   Phase 5 narrow reads; privileged writes denied to clients
 scripts/          OWNER bootstrap + loyalty seed/demo outline
 ```
 
@@ -38,17 +38,46 @@ cp .env.example apps/admin/.env
 
 ### Scripts
 
-| Command | Purpose |
-|---------|---------|
-| `npm install` | Install all workspaces |
-| `npm run dev:customer` | Customer app on http://localhost:5173 |
-| `npm run dev:admin` | Admin app on http://localhost:5174 |
-| `npm run build` | Build shared → apps → functions |
-| `npm run build:apps` | Build shared + both Vite apps |
-| `npm run typecheck` | Typecheck all packages |
-| `npm run lint` | ESLint |
-| `npm test` | Unit tests (includes loyalty state machine) |
-| `npm run format` | Prettier write |
+| Command                | Purpose                                     |
+| ---------------------- | ------------------------------------------- |
+| `npm install`          | Install all workspaces                      |
+| `npm run dev:customer` | Customer app on http://localhost:5173       |
+| `npm run dev:admin`    | Admin app on http://localhost:5174          |
+| `npm run build`        | Build shared → apps → functions             |
+| `npm run build:apps`   | Build shared + both Vite apps               |
+| `npm run typecheck`    | Typecheck all packages                      |
+| `npm run lint`         | ESLint                                      |
+| `npm test`             | Unit tests (includes loyalty state machine) |
+| `npm run format`       | Prettier write                              |
+
+## Phase 5 — Staff / admin product surfaces
+
+Admin routes (role-gated UX; Functions remain authoritative):
+
+| Route               | Who             | Purpose                                                 |
+| ------------------- | --------------- | ------------------------------------------------------- |
+| `/app`              | staff+          | Live stats overview                                     |
+| `/app/counter`      | staff+          | Phone / QR paste / camera scan + stamp / reward actions |
+| `/app/rewards`      | staff+          | Open rewards queue (approve / reject / redeem)          |
+| `/app/customers`    | staff+          | Search + customer detail / history                      |
+| `/app/transactions` | staff+          | Purchase list + filters                                 |
+| `/app/accounts`     | OWNER / MANAGER | Staff list, invites, role assign, disable               |
+| `/app/settings`     | OWNER           | `purchasesRequired` + staff-can-approve                 |
+| `/app/activity`     | OWNER / MANAGER | Activity log viewer                                     |
+
+Customer dashboard shows a scannable counter QR (official logo unchanged).
+
+### Phase 5 admin callables
+
+| Callable                                                       | Who                         | Purpose                                           |
+| -------------------------------------------------------------- | --------------------------- | ------------------------------------------------- |
+| `getAdminStats`                                                | staff+                      | Totals + today’s purchases + reward status counts |
+| `listCustomers` / `getCustomerDetail`                          | staff+                      | Search + detail with purchases/rewards/combos     |
+| `listPurchases`                                                | staff+                      | Filters: customer, staff, date range              |
+| `listActivityLogs`                                             | OWNER / MANAGER             | Audit trail                                       |
+| `listStaff`                                                    | OWNER / MANAGER             | Staff directory                                   |
+| `createStaffInvite` / `listStaffInvites` / `cancelStaffInvite` | OWNER (MANAGER: STAFF only) | Invite workflow                                   |
+| `acceptStaffInvite`                                            | signed-in invitee           | Claim role from pending invite                    |
 
 ## Phase 4 — Loyalty engine
 
@@ -62,16 +91,16 @@ cp .env.example apps/admin/.env
 
 ### Callables
 
-| Callable | Who | Purpose |
-|----------|-----|---------|
-| `getLoyaltySettings` / `updateLoyaltySettings` | any signed-in / OWNER | Singleton `settings/loyalty` (`purchasesRequired` default **9**) |
-| `getLoyaltyProgress` | customer (or staff with id) | Dashboard DTO |
-| `lookupCustomerByPhone` / `lookupCustomerByQr` | staff+ | Counter lookup |
-| `recordPurchase` | staff+ | Stamp with idempotency key |
-| `requestReward` | customer | → `reward_pending` |
-| `approveReward` / `rejectReward` | manager/owner (staff if setting on) | No reset; reject needs reason |
-| `redeemReward` | staff+ | Confirm free drink → new combo |
-| `listOpenRewards` | staff+ | Queue for approve/redeem |
+| Callable                                       | Who                                 | Purpose                                                          |
+| ---------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------- |
+| `getLoyaltySettings` / `updateLoyaltySettings` | any signed-in / OWNER               | Singleton `settings/loyalty` (`purchasesRequired` default **9**) |
+| `getLoyaltyProgress`                           | customer (or staff with id)         | Dashboard DTO                                                    |
+| `lookupCustomerByPhone` / `lookupCustomerByQr` | staff+                              | Counter lookup                                                   |
+| `recordPurchase`                               | staff+                              | Stamp with idempotency key                                       |
+| `requestReward`                                | customer                            | → `reward_pending`                                               |
+| `approveReward` / `rejectReward`               | manager/owner (staff if setting on) | No reset; reject needs reason                                    |
+| `redeemReward`                                 | staff+                              | Confirm free drink → new combo                                   |
+| `listOpenRewards`                              | staff+                              | Queue for approve/redeem                                         |
 
 Registration (`ensureCustomerProfile`) auto-creates the first active combo + QR token.
 
@@ -103,7 +132,7 @@ See `scripts/seed-loyalty-demo.outline.md` for a staging seed outline.
 ### Staff / admin (email + password)
 
 1. Enable **Email/Password** provider.
-2. Routes: `/login` → `/app` · `/app/counter` · `/app/rewards` · `/app/settings` · `/app/accounts` · `/bootstrap`.
+2. Routes: `/login` → `/app` · counter · rewards · customers · transactions · accounts · settings · activity · `/bootstrap`.
 
 ### Bootstrap first OWNER
 
@@ -123,10 +152,11 @@ See `scripts/seed-loyalty-demo.outline.md` for a staging seed outline.
 
 ## Phase status
 
-| Phase | Status |
-|-------|--------|
-| 1 Docs / architecture | Approved |
-| 2 Repo + tooling + Firebase foundation | On `main` |
-| 3 Auth / RBAC | On `main` |
-| 4 Loyalty engine | This branch |
-| 5+ Admin polish / reports | Not started |
+| Phase                                  | Status      |
+| -------------------------------------- | ----------- |
+| 1 Docs / architecture                  | Approved    |
+| 2 Repo + tooling + Firebase foundation | On `main`   |
+| 3 Auth / RBAC                          | On `main`   |
+| 4 Loyalty engine                       | On `main`   |
+| 5 Staff / admin product surfaces       | This branch |
+| 6+ Reports / harden / launch           | Not started |

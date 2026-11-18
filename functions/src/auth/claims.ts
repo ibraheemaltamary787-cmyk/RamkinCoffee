@@ -36,9 +36,7 @@ export function requireAuth(request: CallableRequest): AuthContext {
     role,
     email: typeof request.auth.token.email === 'string' ? request.auth.token.email : null,
     phone:
-      typeof request.auth.token.phone_number === 'string'
-        ? request.auth.token.phone_number
-        : null,
+      typeof request.auth.token.phone_number === 'string' ? request.auth.token.phone_number : null,
     token: request.auth,
   };
 }
@@ -82,12 +80,7 @@ export async function setRoleClaim(uid: string, role: Role): Promise<void> {
 export async function getUserRoleFromAuth(uid: string): Promise<Role | null> {
   const user = await getAuth().getUser(uid);
   const role = user.customClaims?.role;
-  if (
-    role === 'OWNER' ||
-    role === 'MANAGER' ||
-    role === 'STAFF' ||
-    role === 'CUSTOMER'
-  ) {
+  if (role === 'OWNER' || role === 'MANAGER' || role === 'STAFF' || role === 'CUSTOMER') {
     return role;
   }
   return null;

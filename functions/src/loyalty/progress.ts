@@ -15,9 +15,7 @@ export function buildProgressDto(input: {
   openRewardStatus?: RewardRequestStatus | null;
 }): LoyaltyProgressDto {
   const requiredPurchases =
-    typeof input.combo?.requiredPurchases === 'number'
-      ? input.combo.requiredPurchases
-      : 9;
+    typeof input.combo?.requiredPurchases === 'number' ? input.combo.requiredPurchases : 9;
   const purchaseCount =
     typeof input.combo?.purchaseCount === 'number' ? input.combo.purchaseCount : 0;
   const comboStatus = (input.combo?.status as ComboStatus | undefined) ?? null;

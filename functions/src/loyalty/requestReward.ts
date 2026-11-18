@@ -26,8 +26,7 @@ export const requestReward = onCall({ cors: true }, async (request) => {
       throw new HttpsError('not-found', 'Customer profile not found.');
     }
     const customer = customerSnap.data()!;
-    const comboId =
-      input.comboId ?? ((customer.currentComboId as string | null | undefined) ?? null);
+    const comboId = input.comboId ?? (customer.currentComboId as string | null | undefined) ?? null;
     if (!comboId) {
       throw new HttpsError('failed-precondition', 'No active combo to request a reward for.');
     }

@@ -28,10 +28,7 @@ export function createActiveComboInTx(
   return { comboId: comboRef.id };
 }
 
-export async function createActiveCombo(
-  db: Firestore,
-  input: CreateComboInput,
-): Promise<string> {
+export async function createActiveCombo(db: Firestore, input: CreateComboInput): Promise<string> {
   const comboRef = db.collection('combos').doc();
   await comboRef.set({
     customerId: input.customerId,

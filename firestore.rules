@@ -1,7 +1,7 @@
 rules_version = '2';
 
-// RAMKIN Coffee — Phase 4 loyalty rules.
-// Privileged writes (purchases, rewards, settings, roles, activityLogs)
+// RAMKIN Coffee — Phase 5 admin surfaces.
+// Privileged writes (purchases, rewards, settings, roles, invites, activityLogs)
 // stay in Cloud Functions. Clients get narrow reads only.
 
 service cloud.firestore {

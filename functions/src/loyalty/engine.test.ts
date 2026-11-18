@@ -79,8 +79,7 @@ describe('loyalty engine (functions)', () => {
           },
           2,
         ),
-      (err: unknown) =>
-        err instanceof LoyaltyTransitionError && err.code === 'reward_not_approved',
+      (err: unknown) => err instanceof LoyaltyTransitionError && err.code === 'reward_not_approved',
     );
   });
 });

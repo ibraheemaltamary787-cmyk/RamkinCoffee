@@ -49,19 +49,22 @@ export const bootstrapOwner = onCall(
     await setRoleClaim(auth.uid, 'OWNER');
 
     const now = FieldValue.serverTimestamp();
-    await db.collection('users').doc(auth.uid).set(
-      {
-        role: 'OWNER',
-        displayName: authUser.displayName?.trim() || authUser.email.split('@')[0] || 'Owner',
-        phone: authUser.phoneNumber ?? null,
-        email: authUser.email,
-        status: 'active',
-        createdAt: now,
-        updatedAt: now,
-        lastLoginAt: null,
-      },
-      { merge: true },
-    );
+    await db
+      .collection('users')
+      .doc(auth.uid)
+      .set(
+        {
+          role: 'OWNER',
+          displayName: authUser.displayName?.trim() || authUser.email.split('@')[0] || 'Owner',
+          phone: authUser.phoneNumber ?? null,
+          email: authUser.email,
+          status: 'active',
+          createdAt: now,
+          updatedAt: now,
+          lastLoginAt: null,
+        },
+        { merge: true },
+      );
 
     await writeActivityLog({
       actorUid: auth.uid,
@@ -77,7 +80,8 @@ export const bootstrapOwner = onCall(
       uid: auth.uid,
       role: 'OWNER' as const,
       claimsRefreshRequired: true,
-      message: 'OWNER claim set. Force token refresh, then remove or rotate BOOTSTRAP_OWNER_SECRET.',
+      message:
+        'OWNER claim set. Force token refresh, then remove or rotate BOOTSTRAP_OWNER_SECRET.',
     };
   },
 );

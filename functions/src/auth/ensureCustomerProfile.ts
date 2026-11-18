@@ -43,9 +43,7 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
   }
 
   const displayName =
-    input.displayName?.trim() ||
-    authUser.displayName?.trim() ||
-    `Guest ${phone.slice(-4)}`;
+    input.displayName?.trim() || authUser.displayName?.trim() || `Guest ${phone.slice(-4)}`;
 
   const db = getFirestore();
   const settings = await ensureLoyaltySettingsDoc(db);

@@ -200,8 +200,7 @@ describe('loyalty state machine', () => {
           makeReward({ status: 'requested' }),
           9,
         ),
-      (err: unknown) =>
-        err instanceof LoyaltyTransitionError && err.code === 'reward_not_approved',
+      (err: unknown) => err instanceof LoyaltyTransitionError && err.code === 'reward_not_approved',
     );
   });
 

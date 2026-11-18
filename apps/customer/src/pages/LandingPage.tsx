@@ -41,8 +41,8 @@ export function LandingPage() {
         className="animate-fade-up relative mt-8 max-w-lg text-base leading-relaxed text-[var(--ramkin-cream)]/70"
         style={{ animationDelay: '240ms' }}
       >
-        Join the RAMKIN loyalty circle. Sign in with your phone to track stamps toward your next free
-        drink.
+        Join the RAMKIN loyalty circle. Sign in with your phone to track stamps toward your next
+        free drink.
       </p>
 
       <div

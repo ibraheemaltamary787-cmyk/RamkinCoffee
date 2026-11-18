@@ -17,7 +17,10 @@ export const updateLoyaltySettings = onCall({ cors: true }, async (request) => {
 
   const input = updateLoyaltySettingsSchema.parse(request.data ?? {});
   if (input.purchasesRequired === undefined && input.staffCanApproveRewards === undefined) {
-    throw new HttpsError('invalid-argument', 'Provide purchasesRequired and/or staffCanApproveRewards.');
+    throw new HttpsError(
+      'invalid-argument',
+      'Provide purchasesRequired and/or staffCanApproveRewards.',
+    );
   }
 
   const db = getFirestore();
