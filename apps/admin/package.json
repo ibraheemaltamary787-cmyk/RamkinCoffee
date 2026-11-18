@@ -12,13 +12,17 @@
   },
   "dependencies": {
     "@ramkin/shared": "*",
+    "firebase": "^11.10.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.18.5",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.17",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^5.1.0",
     "tailwindcss": "^4.1.17",
     "tsx": "^4.20.6",

@@ -7,15 +7,16 @@ Greenfield monorepo. **Do not** reuse the Hloe app or Firebase project `hloe-45d
 ## Repository layout
 
 ```text
-apps/customer     Vite + React + TS + Tailwind — customer site
-apps/admin        Vite + React + TS + Tailwind — staff / admin
-packages/shared   Shared types, constants, helpers
-functions         Firebase Cloud Functions (TypeScript)
+apps/customer     Vite + React + TS + Tailwind — customer site (phone OTP)
+apps/admin        Vite + React + TS + Tailwind — staff / admin (email/password)
+packages/shared   Shared types, Zod schemas, role helpers
+functions         Firebase Cloud Functions (TypeScript) — auth callables
 firebase.json     Hosting + Functions + Firestore wiring
-firestore.rules   Deny-by-default skeleton
+firestore.rules   Phase 3 narrow reads; privileged writes denied to clients
+scripts/          OWNER bootstrap outline + local Admin SDK helper
 ```
 
-Official brand mark (unmodified): `apps/customer/public/brand/ramkin-logo.jpg` (also copied under `apps/admin/public/brand/`).
+Official brand mark (unmodified): `apps/customer/public/brand/ramkin-logo.jpg` (also under `apps/admin/public/brand/`).
 
 ## Prerequisites
 
@@ -46,74 +47,79 @@ cp .env.example apps/admin/.env
 | `npm run build:apps` | Build shared + both Vite apps |
 | `npm run typecheck` | Typecheck all packages |
 | `npm run lint` | ESLint |
-| `npm test` | Stub / unit tests |
+| `npm test` | Unit tests |
 | `npm run format` | Prettier write |
+
+## Phase 3 — Auth & RBAC
+
+### Customer (phone OTP)
+
+1. Enable **Authentication → Phone** in the RAMKIN Firebase project (Blaze typically required for SMS).
+2. Or use **Auth Emulator** + `VITE_USE_FIREBASE_EMULATORS=true` for local OTP without SMS.
+3. Customer app routes: `/` · `/register` · `/login` · `/dashboard` · `/profile`.
+4. After OTP, the app calls `ensureCustomerProfile` (sets `CUSTOMER` claim + `users` / `customers` docs) and `recordLogin`.
+
+### Staff / admin (email + password)
+
+1. Enable **Email/Password** provider.
+2. Admin app: `/login` → role-gated `/app` shell; `/bootstrap` for first OWNER.
+3. Callables: `bootstrapOwner`, `setStaffRole`, `disableAccount`, `recordLogin`.
+
+### Bootstrap first OWNER
+
+1. Create the owner Auth user (Console → Authentication → Add user).
+2. Set the Functions secret (never commit; never put in Vite):
+
+   ```bash
+   firebase functions:secrets:set BOOTSTRAP_OWNER_SECRET
+   firebase deploy --only functions
+   ```
+
+3. Sign in on the admin app → you will be sent to `/bootstrap` until a staff claim exists.
+4. Paste the same secret → callable sets `{ role: "OWNER" }`, writes `users/{uid}`, logs `role.bootstrap_owner`.
+5. Force token refresh (automatic after success) and **rotate/delete** the secret.
+6. Optional local script: `npx tsx scripts/bootstrap-owner.local.ts --uid <UID>` with gitignored ADC/service account. See `scripts/bootstrap-owner.outline.md`.
+
+### Security posture (Phase 3)
+
+- Custom claims set **only** via Admin SDK in Functions.
+- Firestore: clients may **read** own `users`/`customers` (staff may read too); **all client writes denied**.
+- Profile updates, role changes, disable, login audit → callables + `activityLogs`.
+- Admin route hiding is UX only.
 
 ## Firebase project (owner steps)
 
-Phase 2 leaves placeholders until a dedicated RAMKIN Firebase project exists.
+Phase 2/3 leave **placeholders** until a dedicated RAMKIN Firebase project exists.
 
-1. Open [Firebase Console](https://console.firebase.google.com/) signed in as the RAMKIN owner.
-2. **Add project** → name e.g. `ramkin-coffee` (any unique ID **except** `hloe-45d43`).
-3. Enable **Google Analytics** only if desired (optional for MVP).
-4. Upgrade to **Blaze** when you need Phone Auth / production Functions (required before Phase 3 OTP).
-5. In the new project, enable:
-   - **Authentication** → Sign-in providers: **Phone**, **Email/Password**
-   - **Cloud Firestore** (production mode is fine; we deploy rules from this repo)
-   - **Functions**
-   - **Hosting** (two sites recommended: customer + admin)
-6. Register two **Web** apps (customer + admin) and copy the public config into each app `.env` (`VITE_FIREBASE_*` only).
-7. Locally, with Firebase CLI logged in as the same Google account:
-
-   ```bash
-   firebase login
-   firebase use --add   # select the NEW ramkin project (writes .firebaserc)
-   # .firebaserc ships empty on purpose until a real RAMKIN project ID exists
-   firebase target:apply hosting customer <customer-site-id>
-   firebase target:apply hosting admin <admin-site-id>
-   ```
-
-8. Deploy foundation (after `npm run build`):
-
-   ```bash
-   firebase deploy --only firestore:rules,firestore:indexes,functions
-   ```
-
-9. Smoke-test callable `helloRamkin` from the Functions console or a temporary client call.
+1. Open [Firebase Console](https://console.firebase.google.com/) as the RAMKIN owner.
+2. **Add project** → unique ID **except** `hloe-45d43`.
+3. Upgrade to **Blaze** when you need Phone Auth / production Functions.
+4. Enable Auth (Phone + Email/Password), Firestore, Functions, Hosting.
+5. Register web apps; copy public config into each app `.env` (`VITE_FIREBASE_*` only).
+6. `firebase use --add` → select the new project (`.firebaserc` ships empty on purpose).
+7. Deploy: `firebase deploy --only firestore:rules,firestore:indexes,functions`
 
 **Hard rules**
 
 - Never point `.firebaserc` at `hloe-45d43`.
 - Never commit service-account JSON or private keys.
-- `.env.example` documents **public** Vite keys only.
+- `.env.example` documents **public** Vite keys only; `BOOTSTRAP_OWNER_SECRET` is Functions-only.
 
-## Bootstrap first OWNER (outline — Phase 3)
+## What works with placeholders vs needs Console
 
-Custom claims are set only via Admin SDK. Outline for Phase 3 (not implemented yet):
-
-1. Create the owner Auth user in Firebase Console (Email/Password) **or** via Admin SDK.
-2. Run a one-shot privileged script / callable (gated by a bootstrap secret or first-run empty-OWNER check) that:
-   - Sets Auth custom claim `{ role: "OWNER" }`
-   - Writes `users/{uid}` with `role: "OWNER"`, `status: "active"`
-   - Appends an `activityLogs` entry
-3. Disable or delete the bootstrap path so it cannot be reused.
-4. Thereafter only OWNER may grant `MANAGER` / `STAFF`.
-
-Stub callable `bootstrapOwner` currently returns `failed-precondition` until Phase 3 wires this safely.
-
-## Security posture (Phase 2)
-
-- `firestore.rules` **deny all** client reads/writes.
-- Privileged mutations will go through Cloud Functions in later phases.
-- Admin UI routes are UX only — not security.
+| Capability | Placeholders / CI | Needs real Firebase |
+|------------|-------------------|---------------------|
+| Typecheck / lint / test / build | ✓ | — |
+| Auth UI flows (forms, routing, branding) | ✓ | Live Auth to complete OTP / email sign-in |
+| Phone OTP SMS | — | Phone provider + Blaze (or Auth Emulator) |
+| Custom claims / callables | Code present | Deploy Functions + secrets |
+| Firestore reads of profile | Rules ready | Deploy rules + create docs via callables |
 
 ## Phase status
 
 | Phase | Status |
 |-------|--------|
 | 1 Docs / architecture | Approved |
-| 2 Repo + tooling + Firebase foundation | This scaffold |
-| 3 Auth / RBAC | Not started |
+| 2 Repo + tooling + Firebase foundation | On `main` |
+| 3 Auth / RBAC | This branch |
 | 4 Loyalty engine | Not started |
-
-See Project store docs: `ARCHITECTURE.md`, `DEVELOPMENT_ROADMAP.md`, `PROJECT_CONTEXT.md`.

@@ -1,9 +1,83 @@
 rules_version = '2';
 
-// RAMKIN Coffee — Phase 2 deny-by-default skeleton.
-// Phase 3+ will open narrowly scoped reads; privileged writes stay in Cloud Functions.
+// RAMKIN Coffee — Phase 3 auth / RBAC rules.
+// Privileged writes (role, status, purchases, rewards, settings, activityLogs)
+// stay in Cloud Functions. Clients get narrow reads + no privileged fields.
+
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function claimRole() {
+      return signedIn() && 'role' in request.auth.token
+        ? request.auth.token.role
+        : null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && uid() == userId;
+    }
+
+    function isStaff() {
+      return claimRole() in ['OWNER', 'MANAGER', 'STAFF'];
+    }
+
+    function isManagerOrOwner() {
+      return claimRole() in ['OWNER', 'MANAGER'];
+    }
+
+    function isOwner() {
+      return claimRole() == 'OWNER';
+    }
+
+    match /users/{userId} {
+      // Customers read own profile; staff can read for counter/admin shells.
+      allow read: if isSelf(userId) || isStaff();
+
+      // No client writes — profile/role/status mutations go through Functions.
+      allow create, update, delete: if false;
+    }
+
+    match /customers/{customerId} {
+      allow read: if isSelf(customerId) || isStaff();
+      allow create, update, delete: if false;
+    }
+
+    // Phase 4 collections remain deny-all for clients until engine ships.
+    match /combos/{comboId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    match /purchases/{purchaseId} {
+      allow read, write: if false;
+    }
+
+    match /rewardRequests/{requestId} {
+      allow read, write: if false;
+    }
+
+    match /settings/{docId} {
+      allow read: if isManagerOrOwner();
+      allow write: if false;
+    }
+
+    match /staffInvites/{inviteId} {
+      allow read: if isOwner() || isManagerOrOwner();
+      allow write: if false;
+    }
+
+    match /activityLogs/{logId} {
+      allow read: if isManagerOrOwner();
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
