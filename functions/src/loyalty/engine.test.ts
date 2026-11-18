@@ -1,13 +1,21 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  applyApproveReward,
   applyPurchaseToCombo,
   applyRedeemReward,
+  applyRejectReward,
   applyRequestReward,
+  canApproveRewards,
+  canExportReports,
+  canRecordPurchases,
   LoyaltyTransitionError,
   recordPurchaseSchema,
+  rejectRewardSchema,
   simulateFullLoyaltyCycle,
+  updateLoyaltySettingsSchema,
   type ComboSnapshot,
+  type RewardRequestSnapshot,
 } from '@ramkin/shared';
 
 /**
@@ -81,5 +89,56 @@ describe('loyalty engine (functions)', () => {
         ),
       (err: unknown) => err instanceof LoyaltyTransitionError && err.code === 'reward_not_approved',
     );
+  });
+
+  it('enforces staff approve gate and reject reason schema (callable preconditions)', () => {
+    assert.equal(canRecordPurchases('CUSTOMER'), false);
+    assert.equal(canApproveRewards('STAFF', false), false);
+    assert.equal(canApproveRewards('STAFF', true), true);
+    assert.equal(canExportReports('STAFF'), false);
+    assert.throws(() => rejectRewardSchema.parse({ requestId: 'r1', reason: 'x' }));
+    assert.equal(
+      updateLoyaltySettingsSchema.parse({ purchasesRequired: 3 }).purchasesRequired,
+      3,
+    );
+  });
+
+  it('reject restores completed; approve then redeem opens a fresh combo', () => {
+    const combo: ComboSnapshot = {
+      id: 'c1',
+      customerId: 'u1',
+      requiredPurchases: 2,
+      purchaseCount: 2,
+      status: 'reward_pending',
+      rewardRequestId: 'r1',
+    };
+    const reward: RewardRequestSnapshot = {
+      id: 'r1',
+      customerId: 'u1',
+      comboId: 'c1',
+      status: 'requested',
+      rejectedReason: null,
+    };
+    const rejected = applyRejectReward(combo, reward);
+    assert.equal(rejected.comboStatus, 'completed');
+    assert.equal(rejected.clearRewardRequestId, true);
+
+    const pending = applyRequestReward({
+      ...combo,
+      status: 'completed',
+      rewardRequestId: null,
+    });
+    const approved = applyApproveReward(
+      { ...combo, status: pending.comboStatus, rewardRequestId: 'r2' },
+      { ...reward, id: 'r2', status: 'requested' },
+    );
+    const redeemed = applyRedeemReward(
+      { ...combo, status: approved.comboStatus, rewardRequestId: 'r2' },
+      { ...reward, id: 'r2', status: 'approved' },
+      9,
+    );
+    assert.equal(redeemed.newCombo.status, 'active');
+    assert.equal(redeemed.newCombo.requiredPurchases, 9);
+    assert.equal(combo.purchaseCount, 2);
   });
 });

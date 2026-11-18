@@ -11,10 +11,10 @@ apps/customer     Vite + React + TS + Tailwind — customer site (phone OTP + pr
 apps/admin        Vite + React + TS + Tailwind — staff / admin (counter, rewards, reports)
 packages/shared   Shared types, Zod schemas, loyalty state machine, report columns
 functions         Firebase Cloud Functions — auth + loyalty + export callables
-docs/             Security review + OWNER backup/export runbook
+docs/             Security checklist, UAT script, staff training, backup runbook
 firebase.json     Hosting + Functions + Firestore wiring
 firestore.rules   Phase 6 narrow reads; rateLimits denied; privileged writes via Functions
-scripts/          OWNER bootstrap + loyalty seed/demo outline
+scripts/          OWNER bootstrap + loyalty seed (dry-run + staging ADC)
 ```
 
 Official brand mark (unmodified): `apps/customer/public/brand/ramkin-logo.jpg` (also under `apps/admin/public/brand/` and `functions/assets/brand/` for PDF — binary copy only, not redrawn).
@@ -48,8 +48,21 @@ cp .env.example apps/admin/.env
 | `npm run build:apps`   | Build shared + both Vite apps               |
 | `npm run typecheck`    | Typecheck all packages                      |
 | `npm run lint`         | ESLint                                      |
-| `npm test`             | Unit tests (loyalty + report builders)      |
+| `npm test`             | Unit tests (loyalty, RBAC, security hygiene)|
 | `npm run format`       | Prettier write                              |
+
+## Phase 7 — Testing, UAT prep, security verification
+
+| Artifact | Purpose |
+|----------|---------|
+| Expanded unit tests | Loyalty state machine + Architecture RBAC matrix + App Check / config hygiene |
+| [`docs/SECURITY_CHECKLIST.md`](docs/SECURITY_CHECKLIST.md) | Pass/fail vs codebase + residual risks |
+| [`docs/UAT_SCRIPT.md`](docs/UAT_SCRIPT.md) | register→stamp→request→approve→redeem→report |
+| [`docs/STAFF_TRAINING.md`](docs/STAFF_TRAINING.md) | One-pager: stamp, approve, reject, redeem, phone/QR |
+| [`docs/PHASE7_LIVE_BLOCKERS.md`](docs/PHASE7_LIVE_BLOCKERS.md) | What needs a real Firebase project |
+| `npx tsx scripts/seed-loyalty-demo.local.ts --dry-run` | Demo fixture plan without secrets |
+
+**Staging Hosting / live OTP UAT is blocked** until Ibraheem creates a new RAMKIN Firebase project (never `hloe-45d43`).
 
 ## Phase 6 — Reporting, exports, and hardening
 
@@ -142,7 +155,7 @@ Registration (`ensureCustomerProfile`) auto-creates the first active combo + QR 
 6. Admin **Confirm redeem** → old combo `redeemed`, customer back at **0 / N**.
 7. Re-submit the same `idempotencyKey` → `deduped: true`.
 
-See `scripts/seed-loyalty-demo.outline.md` for a staging seed outline.
+See `scripts/seed-loyalty-demo.outline.md` and `scripts/seed-loyalty-demo.local.ts` (`--dry-run` safe without Firebase).
 
 ### Security posture
 
@@ -183,12 +196,13 @@ See `scripts/seed-loyalty-demo.outline.md` for a staging seed outline.
 
 ## Phase status
 
-| Phase                                  | Status      |
-| -------------------------------------- | ----------- |
-| 1 Docs / architecture                  | Approved    |
-| 2 Repo + tooling + Firebase foundation | On `main`   |
-| 3 Auth / RBAC                          | On `main`   |
-| 4 Loyalty engine                       | On `main`   |
-| 5 Staff / admin product surfaces       | On `main`   |
-| 6 Reports / exports / hardening         | This branch |
-| 7+ UAT / launch                        | Not started |
+| Phase                                  | Status                                      |
+| -------------------------------------- | ------------------------------------------- |
+| 1 Docs / architecture                  | Approved                                    |
+| 2 Repo + tooling + Firebase foundation | On `main`                                   |
+| 3 Auth / RBAC                          | On `main`                                   |
+| 4 Loyalty engine                       | On `main`                                   |
+| 5 Staff / admin product surfaces       | On `main`                                   |
+| 6 Reports / exports / hardening        | On `main`                                   |
+| 7 Testing / UAT prep / security verify | This branch (live Firebase still required)  |
+| 8 Production launch                    | Blocked on Phase 7 UAT + Firebase           |

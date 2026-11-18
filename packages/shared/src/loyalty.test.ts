@@ -14,8 +14,11 @@ import {
   defaultLoyaltySettings,
   isRewardEligible,
   LoyaltyTransitionError,
+  lookupCustomerByPhoneSchema,
+  lookupCustomerByQrSchema,
   normalizePhone,
   progressPercent,
+  rejectRewardSchema,
   simulateFullLoyaltyCycle,
   stampsRemaining,
   type ComboSnapshot,
@@ -218,5 +221,95 @@ describe('loyalty state machine', () => {
     const cycle = simulateFullLoyaltyCycle();
     assert.equal(cycle.afterPurchases, 'completed');
     assert.equal(cycle.stampsPreservedThroughApprove, true);
+  });
+
+  it('reject → re-request → approve → redeem preserves stamp history', () => {
+    const combo = makeCombo({ purchaseCount: 9, status: 'completed' });
+    const firstReq = applyRequestReward(combo);
+    assert.equal(firstReq.comboStatus, 'reward_pending');
+
+    const rejected = applyRejectReward(
+      { ...combo, status: 'reward_pending', rewardRequestId: 'req-1' },
+      makeReward({ id: 'req-1' }),
+    );
+    assert.equal(rejected.comboStatus, 'completed');
+    assert.equal(combo.purchaseCount, 9);
+
+    const secondReq = applyRequestReward({
+      ...combo,
+      status: 'completed',
+      rewardRequestId: null,
+    });
+    assert.equal(secondReq.comboStatus, 'reward_pending');
+
+    const approved = applyApproveReward(
+      { ...combo, status: 'reward_pending', rewardRequestId: 'req-2' },
+      makeReward({ id: 'req-2' }),
+    );
+    const redeemed = applyRedeemReward(
+      { ...combo, status: approved.comboStatus, rewardRequestId: 'req-2' },
+      makeReward({ id: 'req-2', status: 'approved' }),
+      9,
+    );
+    assert.equal(redeemed.oldComboStatus, 'redeemed');
+    assert.equal(redeemed.newCombo.purchaseCount, 0);
+    assert.equal(combo.purchaseCount, 9);
+  });
+
+  it('redeem snapshots next requiredPurchases from settings (N change)', () => {
+    const combo = makeCombo({
+      purchaseCount: 2,
+      requiredPurchases: 2,
+      status: 'reward_approved',
+      rewardRequestId: 'req-1',
+    });
+    const redeemed = applyRedeemReward(combo, makeReward({ status: 'approved' }), 5);
+    assert.equal(redeemed.newCombo.requiredPurchases, 5);
+    assert.equal(combo.requiredPurchases, 2);
+  });
+
+  it('blocks request on active combo and approve/reject mismatches', () => {
+    assert.throws(
+      () => applyRequestReward(makeCombo({ purchaseCount: 3, status: 'active' })),
+      (err: unknown) =>
+        err instanceof LoyaltyTransitionError && err.code === 'combo_not_completed',
+    );
+    assert.throws(
+      () =>
+        applyApproveReward(
+          makeCombo({ purchaseCount: 9, status: 'reward_pending', rewardRequestId: 'req-1' }),
+          makeReward({ comboId: 'other-combo' }),
+        ),
+      (err: unknown) => err instanceof LoyaltyTransitionError && err.code === 'reward_mismatch',
+    );
+    assert.throws(
+      () =>
+        applyRejectReward(
+          makeCombo({ purchaseCount: 9, status: 'reward_pending', rewardRequestId: 'req-1' }),
+          makeReward({ status: 'approved' }),
+        ),
+      (err: unknown) =>
+        err instanceof LoyaltyTransitionError && err.code === 'reward_not_requested',
+    );
+  });
+
+  it('blocks purchase when already at required count but still marked active', () => {
+    assert.throws(
+      () => applyPurchaseToCombo(makeCombo({ purchaseCount: 9, status: 'active' })),
+      (err: unknown) => err instanceof LoyaltyTransitionError && err.code === 'already_eligible',
+    );
+  });
+});
+
+describe('loyalty input schemas', () => {
+  it('validates lookup phone / QR and reject reason bounds', () => {
+    assert.equal(lookupCustomerByPhoneSchema.parse({ phone: '+15550100200' }).phone, '+15550100200');
+    assert.throws(() => lookupCustomerByPhoneSchema.parse({ phone: '12' }));
+    assert.throws(() => lookupCustomerByQrSchema.parse({ qrToken: 'tooshort' }));
+    assert.throws(() => rejectRewardSchema.parse({ requestId: 'r1', reason: 'no' }));
+    assert.equal(
+      rejectRewardSchema.parse({ requestId: 'r1', reason: 'Duplicate claim' }).reason,
+      'Duplicate claim',
+    );
   });
 });

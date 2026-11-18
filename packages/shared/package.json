@@ -17,7 +17,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test src/loyalty.test.ts src/auth.test.ts src/admin.test.ts src/reports.test.ts"
+    "test": "tsx --test src/loyalty.test.ts src/auth.test.ts src/admin.test.ts src/reports.test.ts src/rbac-matrix.test.ts"
   },
   "devDependencies": {
     "tsx": "^4.20.6",

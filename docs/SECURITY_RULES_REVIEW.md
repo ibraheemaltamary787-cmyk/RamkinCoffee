@@ -1,6 +1,7 @@
 # Security rules review — Phase 6
 
-Companion to `firestore.rules`. UI role gates are **not** security; callables + rules are.
+Companion to `firestore.rules`. UI role gates are **not** security; callables + rules are.  
+Phase 7 pass/fail verification: [`SECURITY_CHECKLIST.md`](./SECURITY_CHECKLIST.md) · live gaps: [`PHASE7_LIVE_BLOCKERS.md`](./PHASE7_LIVE_BLOCKERS.md).
 
 ## Posture (current)
 
