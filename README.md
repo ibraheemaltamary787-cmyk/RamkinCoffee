@@ -34,8 +34,8 @@ cd RamkinCoffee
 npm install
 cp .env.example apps/customer/.env
 cp .env.example apps/admin/.env
-# .env.example already has projectId / authDomain / messagingSenderId for ramkincoffee.
-# Paste VITE_FIREBASE_API_KEY + VITE_FIREBASE_APP_ID from Console → Web app; confirm storageBucket.
+# .env.example already has the public Web app config for ramkincoffee (RAMKIN Web).
+# Copy as-is into each app .env; do not add service-account secrets.
 ```
 
 ### Scripts

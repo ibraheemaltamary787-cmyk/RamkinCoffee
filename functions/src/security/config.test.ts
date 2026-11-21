@@ -21,9 +21,16 @@ describe('Firebase project hygiene (Phase 7)', () => {
     assert.match(envExample, /^VITE_FIREBASE_AUTH_DOMAIN=ramkincoffee\.firebaseapp\.com$/m);
     assert.doesNotMatch(envExample, /^VITE_FIREBASE_PROJECT_ID=\s*hloe/m);
     assert.doesNotMatch(envExample, /BEGIN PRIVATE KEY/);
-    // apiKey / appId remain TODO placeholders (empty) until Console values are provided.
-    assert.match(envExample, /^VITE_FIREBASE_API_KEY=\s*$/m);
-    assert.match(envExample, /^VITE_FIREBASE_APP_ID=\s*$/m);
+    // Public web config from Console web app "RAMKIN Web" (not secrets).
+    assert.match(envExample, /^VITE_FIREBASE_API_KEY=AIzaSy/m);
+    assert.match(
+      envExample,
+      /^VITE_FIREBASE_APP_ID=1:392513147835:web:[a-f0-9]+$/m,
+    );
+    assert.match(
+      envExample,
+      /^VITE_FIREBASE_STORAGE_BUCKET=ramkincoffee\.firebasestorage\.app$/m,
+    );
     // Only fail on an uncommented assignment with a real value (comments may show the name).
     assert.doesNotMatch(envExample, /^BOOTSTRAP_OWNER_SECRET=\s*\S+/m);
   });
