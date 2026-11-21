@@ -45,7 +45,7 @@ export function TransactionsPage() {
       >
         Transactions
       </h1>
-      <p className="mt-2 text-sm text-[var(--ramkin-cream)]/60">
+      <p className="mt-2 text-sm text-[var(--ramkin-mist)]/60">
         Purchase history with optional customer, staff, and date filters. For Excel/PDF, use{' '}
         <Link to="/app/reports" className="text-[var(--ramkin-gold)] hover:underline">
           Reports
@@ -95,35 +95,49 @@ export function TransactionsPage() {
 
       {error ? <p className="mt-4 text-sm text-red-300/90">{error}</p> : null}
 
-      <ul className="mt-6 divide-y divide-white/10 border border-white/10 bg-black/25">
-        {purchases.length === 0 ? (
-          <li className="p-4 text-sm text-[var(--ramkin-cream)]/50">No purchases match.</li>
-        ) : (
-          purchases.map((p) => (
-            <li
-              key={p.purchaseId}
-              className="flex flex-wrap items-start justify-between gap-3 px-4 py-3"
-            >
-              <div>
-                <Link
-                  to={`/app/customers/${p.customerId}`}
-                  className="text-[var(--ramkin-cream)] hover:text-[var(--ramkin-gold)]"
-                >
-                  {p.customerName ?? p.customerId.slice(0, 8)}
-                </Link>
-                <p className="text-xs text-[var(--ramkin-cream)]/45">{p.customerPhone ?? '—'}</p>
-                {p.note ? (
-                  <p className="mt-1 text-xs text-[var(--ramkin-cream)]/40">{p.note}</p>
-                ) : null}
-              </div>
-              <div className="text-right text-xs text-[var(--ramkin-cream)]/50">
-                <p>{p.createdAt ?? '—'}</p>
-                <p className="mt-1">staff {p.recordedBy.slice(0, 8)}…</p>
-              </div>
-            </li>
-          ))
-        )}
-      </ul>
+      <div className="mt-6 overflow-x-auto border border-white/10 bg-black/30">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Phone</th>
+              <th>When</th>
+              <th>Staff</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {purchases.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="text-[var(--ramkin-mist)]/50">
+                  No purchases match.
+                </td>
+              </tr>
+            ) : (
+              purchases.map((p) => (
+                <tr key={p.purchaseId}>
+                  <td>
+                    <Link
+                      to={`/app/customers/${p.customerId}`}
+                      className="text-[var(--ramkin-mist)] hover:text-[var(--ramkin-gold)]"
+                    >
+                      {p.customerName ?? p.customerId.slice(0, 8)}
+                    </Link>
+                  </td>
+                  <td className="text-[var(--ramkin-mist)]/55">{p.customerPhone ?? '—'}</td>
+                  <td className="whitespace-nowrap text-[var(--ramkin-mist)]/50">
+                    {p.createdAt ?? '—'}
+                  </td>
+                  <td className="font-mono text-xs text-[var(--ramkin-mist)]/45">
+                    {p.recordedBy.slice(0, 8)}…
+                  </td>
+                  <td className="text-[var(--ramkin-mist)]/40">{p.note ?? '—'}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

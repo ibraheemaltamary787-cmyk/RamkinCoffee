@@ -50,7 +50,7 @@ export function BootstrapPage() {
       >
         OWNER bootstrap
       </h1>
-      <p className="mt-3 text-sm leading-relaxed text-[var(--ramkin-cream)]/65">
+      <p className="mt-3 text-sm leading-relaxed text-[var(--ramkin-mist)]/65">
         Current claim: <span className="text-[var(--ramkin-gold)]">{role ?? 'none'}</span>. Paste
         the Functions secret <code>BOOTSTRAP_OWNER_SECRET</code> (never a Vite env). One-shot —
         locked once an OWNER document exists. Prefer rotating the secret afterward.
@@ -87,7 +87,7 @@ export function BootstrapPage() {
         <button
           type="button"
           onClick={() => void signOut()}
-          className="text-[var(--ramkin-cream)]/50 hover:text-[var(--ramkin-gold)]"
+          className="text-[var(--ramkin-mist)]/50 hover:text-[var(--ramkin-gold)]"
         >
           Sign out
         </button>

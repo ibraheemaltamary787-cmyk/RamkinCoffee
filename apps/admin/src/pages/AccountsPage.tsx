@@ -68,7 +68,7 @@ export function AccountsPage() {
         >
           Staff
         </h1>
-        <p className="mt-2 text-sm text-[var(--ramkin-cream)]/60">
+        <p className="mt-2 text-sm text-[var(--ramkin-mist)]/60">
           OWNER assigns roles and invites managers. MANAGER may invite STAFF and disable accounts.
           Server callables enforce RBAC.
         </p>
@@ -78,7 +78,7 @@ export function AccountsPage() {
         <h2 className="text-sm tracking-[0.2em] text-[var(--ramkin-gold-soft)] uppercase">Team</h2>
         <ul className="mt-3 divide-y divide-white/10 border border-white/10 bg-black/25">
           {staff.length === 0 ? (
-            <li className="p-4 text-sm text-[var(--ramkin-cream)]/50">No staff loaded.</li>
+            <li className="p-4 text-sm text-[var(--ramkin-mist)]/50">No staff loaded.</li>
           ) : (
             staff.map((member) => (
               <li
@@ -86,10 +86,10 @@ export function AccountsPage() {
                 className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
               >
                 <div>
-                  <p className="text-[var(--ramkin-cream)]">
+                  <p className="text-[var(--ramkin-mist)]">
                     {member.displayName || member.email || member.uid}
                   </p>
-                  <p className="text-xs text-[var(--ramkin-cream)]/45">
+                  <p className="text-xs text-[var(--ramkin-mist)]/45">
                     {member.email ?? '—'} · {member.status}
                   </p>
                 </div>
@@ -167,7 +167,7 @@ export function AccountsPage() {
           >
             Create invite
           </button>
-          <p className="text-xs text-[var(--ramkin-cream)]/40">
+          <p className="text-xs text-[var(--ramkin-mist)]/40">
             Invitee signs in with email/password, then accepts the invite from Login or Bootstrap.
           </p>
         </form>
@@ -179,7 +179,7 @@ export function AccountsPage() {
         </h2>
         <ul className="mt-3 divide-y divide-white/10 border border-white/10">
           {invites.length === 0 ? (
-            <li className="p-3 text-sm text-[var(--ramkin-cream)]/45">No pending invites.</li>
+            <li className="p-3 text-sm text-[var(--ramkin-mist)]/45">No pending invites.</li>
           ) : (
             invites.map((invite) => (
               <li
@@ -187,10 +187,10 @@ export function AccountsPage() {
                 className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 text-sm"
               >
                 <div>
-                  <p className="text-[var(--ramkin-cream)]/80">
+                  <p className="text-[var(--ramkin-mist)]/80">
                     {invite.email} · {invite.role}
                   </p>
-                  <p className="text-xs text-[var(--ramkin-cream)]/40">
+                  <p className="text-xs text-[var(--ramkin-mist)]/40">
                     expires {invite.expiresAt ?? '—'}
                   </p>
                 </div>

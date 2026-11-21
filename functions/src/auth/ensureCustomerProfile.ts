@@ -34,16 +34,22 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
     throw new HttpsError('permission-denied', 'This account is disabled.');
   }
 
-  const phone = authUser.phoneNumber ?? auth.phone;
-  if (!phone) {
+  const phone = authUser.phoneNumber ?? auth.phone ?? null;
+  const email = authUser.email ?? auth.email ?? null;
+
+  // Spark keep-free: Email/Password is the default. Phone OTP remains optional (emulator / test numbers).
+  if (!phone && !email) {
     throw new HttpsError(
       'failed-precondition',
-      'Phone-authenticated customer required. Complete OTP first.',
+      'Email/password or phone sign-in required before creating a customer profile.',
     );
   }
 
   const displayName =
-    input.displayName?.trim() || authUser.displayName?.trim() || `Guest ${phone.slice(-4)}`;
+    input.displayName?.trim() ||
+    authUser.displayName?.trim() ||
+    (email ? email.split('@')[0]! : null) ||
+    (phone ? `Guest ${phone.slice(-4)}` : 'Guest');
 
   const db = getFirestore();
   const settings = await ensureLoyaltySettingsDoc(db);
@@ -75,6 +81,7 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
         {
           displayName,
           phone,
+          email,
           updatedAt: FieldValue.serverTimestamp(),
         },
         { merge: true },
@@ -87,6 +94,7 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
       const customerPatch: Record<string, unknown> = {
         displayName,
         phone,
+        email,
       };
 
       if (!qrToken) {
@@ -122,7 +130,7 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
       role: 'CUSTOMER',
       displayName,
       phone,
-      email: authUser.email ?? null,
+      email,
       status: 'active',
       createdAt: now,
       updatedAt: now,
@@ -131,6 +139,7 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
     tx.set(customerRef, {
       uid: auth.uid,
       phone,
+      email,
       displayName,
       qrToken,
       currentComboId,
@@ -152,7 +161,8 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
       entityType: 'user',
       entityId: auth.uid,
       metadata: {
-        phoneLast4: phone.slice(-4),
+        phoneLast4: phone ? phone.slice(-4) : null,
+        emailDomain: email?.includes('@') ? email.split('@')[1] : null,
         comboId: currentComboId,
         comboCreated,
       },
@@ -166,7 +176,7 @@ export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
     role: 'CUSTOMER',
     displayName: data.displayName ?? displayName,
     phone: data.phone ?? phone,
-    email: data.email ?? null,
+    email: data.email ?? email,
     status: data.status ?? 'active',
     lastLoginAt: toIso(data.lastLoginAt),
     currentComboId,

@@ -42,7 +42,7 @@ export function LoginPage() {
         >
           Almost there
         </h1>
-        <p className="mt-3 text-sm text-[var(--ramkin-cream)]/65">
+        <p className="mt-3 text-sm text-[var(--ramkin-mist)]/65">
           This account has no staff role yet. Accept a pending invite for your email, or complete
           OWNER bootstrap.
         </p>
@@ -135,15 +135,15 @@ export function LoginPage() {
         </p>
       </div>
 
-      {!configured && (
+      {!configured ? (
         <p className="relative mb-4 border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 text-sm text-[var(--ramkin-gold-soft)]">
-          Waiting on real Firebase web config. Email/password Auth wiring is ready once env +
-          console providers are set.
+          Waiting on Firebase web config. Copy .env.example → apps/admin/.env (Email/Password is
+          enabled on Spark).
         </p>
-      )}
+      ) : null}
 
       <form onSubmit={onSubmit} className="relative space-y-4">
-        <label className="block text-sm text-[var(--ramkin-cream)]/80">
+        <label className="block text-sm text-[var(--ramkin-mist)]/80">
           Email
           <input
             type="email"
@@ -154,7 +154,7 @@ export function LoginPage() {
             required
           />
         </label>
-        <label className="block text-sm text-[var(--ramkin-cream)]/80">
+        <label className="block text-sm text-[var(--ramkin-mist)]/80">
           Password
           <input
             type="password"
@@ -176,9 +176,11 @@ export function LoginPage() {
 
       {error && <p className="relative mt-4 text-sm text-red-300">{error}</p>}
 
-      <p className="relative mt-8 text-center text-xs leading-relaxed text-[var(--ramkin-cream)]/45">
-        First OWNER: create email user in Console, set <code>BOOTSTRAP_OWNER_SECRET</code>, then
-        call <code>bootstrapOwner</code>. Invited staff sign in here and accept their invite.
+      <p className="relative mt-8 text-center text-xs leading-relaxed text-[var(--ramkin-mist)]/45">
+        Emulator: add Email/Password user in Emulator UI (:4000), sign in here, then{' '}
+        <code className="text-[var(--ramkin-gold-soft)]">/bootstrap</code> with{' '}
+        <code className="text-[var(--ramkin-gold-soft)]">functions/.secret.local</code>. Invited
+        staff accept their invite after sign-in. No Hosting publish / Blaze.
       </p>
     </main>
   );

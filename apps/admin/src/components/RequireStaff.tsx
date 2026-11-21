@@ -31,7 +31,7 @@ export function RequireStaff({ children, roles }: RequireStaffProps) {
     return (
       <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 text-center">
         <h1 className="text-xl text-[var(--ramkin-gold)]">Staff access required</h1>
-        <p className="mt-3 text-sm text-[var(--ramkin-cream)]/65">
+        <p className="mt-3 text-sm text-[var(--ramkin-mist)]/65">
           This account has no staff role claim. Complete OWNER bootstrap or ask an OWNER to run{' '}
           <code>setStaffRole</code>. UI gates are UX only — Functions remain authoritative.
         </p>
@@ -43,7 +43,7 @@ export function RequireStaff({ children, roles }: RequireStaffProps) {
     return (
       <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 text-center">
         <h1 className="text-xl text-[var(--ramkin-gold)]">Insufficient role</h1>
-        <p className="mt-3 text-sm text-[var(--ramkin-cream)]/65">
+        <p className="mt-3 text-sm text-[var(--ramkin-mist)]/65">
           Your role ({role}) cannot open this screen. Server callables will also deny the action.
         </p>
       </main>

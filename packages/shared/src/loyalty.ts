@@ -42,6 +42,7 @@ export interface LoyaltyProgressDto {
   customerId: string;
   displayName: string;
   phone: string | null;
+  email: string | null;
   qrToken: string;
   currentComboId: string | null;
   purchaseCount: number;
@@ -59,6 +60,7 @@ export interface CustomerLookupDto {
   customerId: string;
   displayName: string;
   phone: string | null;
+  email: string | null;
   qrToken: string;
   status: 'active' | 'disabled';
   currentComboId: string | null;

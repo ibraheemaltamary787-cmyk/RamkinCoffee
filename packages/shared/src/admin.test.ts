@@ -35,10 +35,15 @@ describe('admin RBAC helpers', () => {
 });
 
 describe('customer search', () => {
-  it('matches name and phone digits', () => {
-    const customer = { displayName: 'Amina Coffee', phone: '+15550100200' };
+  it('matches name, phone digits, and email', () => {
+    const customer = {
+      displayName: 'Amina Coffee',
+      phone: '+15550100200',
+      email: 'amina@ramkin.local',
+    };
     assert.equal(customerMatchesQuery(customer, 'amina'), true);
     assert.equal(customerMatchesQuery(customer, '0100'), true);
+    assert.equal(customerMatchesQuery(customer, 'ramkin.local'), true);
     assert.equal(customerMatchesQuery(customer, 'zzz'), false);
   });
 });

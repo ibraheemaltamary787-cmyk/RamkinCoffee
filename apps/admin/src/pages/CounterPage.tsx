@@ -12,9 +12,26 @@ import {
   newIdempotencyKey,
 } from '../services/callables';
 
+function nextActionHint(customer: CustomerLookupDto): string {
+  if (customer.status === 'disabled') return 'Account disabled — no counter actions.';
+  if (customer.openRewardStatus === 'requested') {
+    return 'Step: approve or reject this reward request.';
+  }
+  if (customer.openRewardStatus === 'approved') {
+    return 'Step: confirm redeem after the free drink is given (resets the combo).';
+  }
+  if (customer.comboStatus === 'completed') {
+    return 'Combo complete — waiting for the customer to request their reward.';
+  }
+  if (customer.comboStatus === 'active') {
+    return `Step: record purchase (${customer.remaining} stamp${customer.remaining === 1 ? '' : 's'} left).`;
+  }
+  return 'Look up a customer to begin.';
+}
+
 export function CounterPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [mode, setMode] = useState<'phone' | 'qr' | 'scan'>('phone');
+  const [mode, setMode] = useState<'phone' | 'qr' | 'scan'>('qr');
   const [query, setQuery] = useState('');
   const [customer, setCustomer] = useState<CustomerLookupDto | null>(null);
   const [busy, setBusy] = useState(false);
@@ -152,6 +169,10 @@ export function CounterPage() {
     }
   }
 
+  const pct = customer
+    ? Math.min(100, Math.round((customer.purchaseCount / customer.requiredPurchases) * 100))
+    : 0;
+
   return (
     <section className="animate-fade-up">
       <h1
@@ -160,16 +181,23 @@ export function CounterPage() {
       >
         Counter
       </h1>
-      <p className="mt-2 max-w-2xl text-sm text-[var(--ramkin-cream)]/60">
-        Look up by phone, paste a QR token, or scan the customer’s dashboard QR. Record purchases
-        and handle reward approve / reject / redeem. Customers never self-stamp.
+      <p className="mt-2 max-w-2xl text-sm text-[var(--ramkin-mist)]/60">
+        Prefer QR for email-registered customers (Spark path). Phone lookup still works when a phone
+        is linked. Record purchases and handle approve → redeem. Customers never self-stamp.
       </p>
+
+      <ol className="mt-5 flex flex-wrap gap-2 text-[10px] tracking-[0.12em] text-[var(--ramkin-mist)]/45 uppercase">
+        <li className="border border-white/10 px-2.5 py-1">1 Lookup</li>
+        <li className="border border-white/10 px-2.5 py-1">2 Stamp</li>
+        <li className="border border-white/10 px-2.5 py-1">3 Approve</li>
+        <li className="border border-white/10 px-2.5 py-1">4 Redeem</li>
+      </ol>
 
       <div className="mt-8 flex flex-wrap gap-2">
         {(
           [
-            ['phone', 'Phone'],
             ['qr', 'QR token'],
+            ['phone', 'Phone'],
             ['scan', 'Scan camera'],
           ] as const
         ).map(([value, label]) => (
@@ -180,7 +208,7 @@ export function CounterPage() {
             className={`px-3 py-2 text-xs tracking-[0.15em] uppercase ${
               mode === value
                 ? 'border border-[var(--ramkin-gold)] text-[var(--ramkin-gold)]'
-                : 'border border-white/15 text-[var(--ramkin-cream)]/50'
+                : 'border border-white/15 text-[var(--ramkin-mist)]/50'
             }`}
           >
             {label}
@@ -202,13 +230,13 @@ export function CounterPage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={mode === 'phone' ? '+15550100200' : '32-char qr token'}
-            className="min-w-[16rem] flex-1 border border-white/15 bg-black/40 px-3 py-2 text-sm text-[var(--ramkin-cream)] outline-none focus:border-[var(--ramkin-gold)]/50"
+            placeholder={mode === 'phone' ? '+15550100200' : 'Paste customer QR token'}
+            className="min-w-[16rem] flex-1 border border-white/15 bg-black/40 px-3 py-2.5 text-sm text-[var(--ramkin-mist)] outline-none focus:border-[var(--ramkin-gold)]/50"
           />
           <button
             type="submit"
             disabled={busy || !query.trim()}
-            className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)]/10 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-gold)] uppercase disabled:opacity-50"
+            className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)]/10 px-4 py-2.5 text-xs tracking-[0.2em] text-[var(--ramkin-gold)] uppercase disabled:opacity-50"
           >
             Lookup
           </button>
@@ -219,11 +247,18 @@ export function CounterPage() {
       {note ? <p className="mt-4 text-sm text-[var(--ramkin-gold-soft)]">{note}</p> : null}
 
       {customer ? (
-        <div className="mt-8 border border-[var(--ramkin-gold)]/20 bg-black/35 p-5 shadow-[0_0_40px_rgba(201,169,98,0.06)]">
-          <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="mt-8 border border-[var(--ramkin-line)] bg-black/40 p-5">
+          <p className="text-xs tracking-[0.16em] text-[var(--ramkin-gold-soft)]/70 uppercase">
+            {nextActionHint(customer)}
+          </p>
+
+          <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-lg text-[var(--ramkin-cream)]">{customer.displayName}</p>
-              <p className="mt-1 text-sm text-[var(--ramkin-cream)]/55">{customer.phone}</p>
+              <p className="text-lg text-[var(--ramkin-mist)]">{customer.displayName}</p>
+              <p className="mt-1 text-sm text-[var(--ramkin-mist)]/55">
+                {customer.email ?? '—'}
+                {customer.phone ? ` · ${customer.phone}` : ''}
+              </p>
               <p className="mt-1 text-xs tracking-[0.15em] text-[var(--ramkin-gold-soft)]/60 uppercase">
                 {customer.status} · {customer.comboStatus ?? 'no combo'}
               </p>
@@ -235,10 +270,15 @@ export function CounterPage() {
               >
                 {customer.purchaseCount}/{customer.requiredPurchases}
               </p>
-              <p className="text-xs text-[var(--ramkin-cream)]/45">
-                {customer.remaining} remaining
-              </p>
+              <p className="text-xs text-[var(--ramkin-mist)]/45">{customer.remaining} remaining</p>
             </div>
+          </div>
+
+          <div className="mt-4 h-1.5 w-full overflow-hidden bg-white/6">
+            <div
+              className="h-full bg-[var(--ramkin-gold)] transition-all duration-500"
+              style={{ width: `${pct}%` }}
+            />
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
@@ -246,7 +286,7 @@ export function CounterPage() {
               type="button"
               disabled={busy || customer.status === 'disabled' || customer.comboStatus !== 'active'}
               onClick={() => void onStamp()}
-              className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)]/15 px-4 py-2 text-xs tracking-[0.18em] text-[var(--ramkin-gold)] uppercase disabled:opacity-40"
+              className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] px-4 py-2.5 text-xs tracking-[0.18em] text-black uppercase disabled:opacity-40"
             >
               Record purchase
             </button>
@@ -257,7 +297,7 @@ export function CounterPage() {
                   type="button"
                   disabled={busy}
                   onClick={() => void onApprove()}
-                  className="border border-white/20 px-4 py-2 text-xs tracking-[0.18em] uppercase hover:border-[var(--ramkin-gold)]/50"
+                  className="border border-[var(--ramkin-gold)]/70 px-4 py-2.5 text-xs tracking-[0.18em] text-[var(--ramkin-gold)] uppercase"
                 >
                   Approve reward
                 </button>
@@ -272,7 +312,7 @@ export function CounterPage() {
                     type="button"
                     disabled={busy}
                     onClick={() => void onReject()}
-                    className="border border-white/20 px-4 py-2 text-xs tracking-[0.18em] uppercase"
+                    className="border border-white/20 px-4 py-2.5 text-xs tracking-[0.18em] uppercase"
                   >
                     Reject
                   </button>
@@ -285,7 +325,7 @@ export function CounterPage() {
                 type="button"
                 disabled={busy}
                 onClick={() => void onRedeem()}
-                className="border border-[var(--ramkin-gold)] px-4 py-2 text-xs tracking-[0.18em] text-[var(--ramkin-gold)] uppercase"
+                className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)]/15 px-4 py-2.5 text-xs tracking-[0.18em] text-[var(--ramkin-gold)] uppercase"
               >
                 Confirm redeem
               </button>

@@ -1,13 +1,14 @@
 @import 'tailwindcss';
 
 :root {
-  --ramkin-black: #0a0a0a;
-  --ramkin-ink: #121212;
-  --ramkin-gold: #c9a962;
-  --ramkin-gold-soft: #e8d5a3;
-  --ramkin-cream: #f3efe6;
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-body: 'Outfit', system-ui, sans-serif;
+  --ramkin-black: #050505;
+  --ramkin-ink: #0e0e0e;
+  --ramkin-gold: #d4af37;
+  --ramkin-gold-soft: #e6c96a;
+  --ramkin-mist: #e8e4dc;
+  --ramkin-line: rgba(212, 175, 55, 0.28);
+  --font-display: 'Syne', 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-body: 'Manrope', 'Avenir Next', 'Segoe UI', sans-serif;
 }
 
 *,
@@ -25,18 +26,19 @@ body,
 body {
   margin: 0;
   font-family: var(--font-body);
-  color: var(--ramkin-cream);
+  color: var(--ramkin-mist);
   background:
-    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201, 169, 98, 0.18), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(201, 169, 98, 0.08), transparent 50%),
-    linear-gradient(165deg, #050505 0%, #121212 45%, #0a0a0a 100%);
+    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(212, 175, 55, 0.2), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 100% 90%, rgba(212, 175, 55, 0.07), transparent 50%),
+    linear-gradient(168deg, #030303 0%, #101010 48%, #070707 100%);
   background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
 }
 
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -54,10 +56,24 @@ body {
   }
 }
 
+@keyframes stamp-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 .animate-fade-up {
-  animation: fade-up 0.7s ease-out both;
+  animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animate-gold-sheen {
-  animation: gold-sheen 3.5s ease-in-out infinite;
+  animation: gold-sheen 3.2s ease-in-out infinite;
+}
+
+.stamp-bar-fill {
+  transform-origin: left center;
+  animation: stamp-fill 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

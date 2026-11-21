@@ -27,6 +27,15 @@ function statusLabel(progress: LoyaltyProgressDto): string {
   }
 }
 
+function statusTone(progress: LoyaltyProgressDto | null): string {
+  if (!progress) return 'text-[var(--ramkin-mist)]/55';
+  if (progress.comboStatus === 'reward_approved') return 'text-[var(--ramkin-gold)]';
+  if (progress.comboStatus === 'completed' || progress.comboStatus === 'reward_pending') {
+    return 'text-[var(--ramkin-gold-soft)]';
+  }
+  return 'text-[var(--ramkin-mist)]/55';
+}
+
 export function DashboardPage() {
   const { loading, user, displayName, signOut, configured } = useAuth();
   const [progress, setProgress] = useState<LoyaltyProgressDto | null>(null);
@@ -66,7 +75,7 @@ export function DashboardPage() {
 
   if (!configured) {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-6 text-center">
+      <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-5 text-center">
         <p className="text-[var(--ramkin-gold-soft)]">
           Configure Firebase env vars before using the dashboard.
         </p>
@@ -93,61 +102,65 @@ export function DashboardPage() {
   const required = progress?.requiredPurchases ?? DEFAULT_PURCHASES_REQUIRED;
   const pct = progressPercent(purchaseCount, required);
   const canRequest = progress?.rewardEligible === true && !progress.openRewardRequestId;
+  const identity = displayName || user.email || user.phoneNumber || 'Guest';
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-lg px-6 py-10">
-      <header className="mb-10 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+    <main className="mx-auto min-h-dvh w-full max-w-lg px-5 py-8 sm:px-6 sm:py-10">
+      <header className="mb-8 flex items-center justify-between gap-4 sm:mb-10">
+        <div className="flex min-w-0 items-center gap-3">
           <BrandMark size="sm" />
-          <div>
+          <div className="min-w-0">
             <p
-              className="text-xl tracking-[0.15em] text-[var(--ramkin-gold)]"
+              className="truncate text-xl tracking-[0.16em] text-[var(--ramkin-gold)]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {BRAND.name}
             </p>
-            <p className="text-xs text-[var(--ramkin-cream)]/55">Loyalty dashboard</p>
+            <p className="text-xs tracking-[0.12em] text-[var(--ramkin-mist)]/50 uppercase">
+              Loyalty
+            </p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => void signOut()}
-          className="text-xs tracking-[0.2em] text-[var(--ramkin-gold-soft)]/80 uppercase hover:text-[var(--ramkin-gold)]"
+          className="shrink-0 text-xs tracking-[0.2em] text-[var(--ramkin-gold-soft)]/80 uppercase transition hover:text-[var(--ramkin-gold)]"
         >
           Sign out
         </button>
       </header>
 
-      <section className="animate-fade-up border border-[var(--ramkin-gold)]/25 bg-black/40 p-6 shadow-[0_0_50px_rgba(201,169,98,0.08)]">
-        <p className="text-sm text-[var(--ramkin-cream)]/60">Welcome</p>
+      <section className="animate-fade-up border border-[var(--ramkin-line)] bg-black/45 p-5 sm:p-6">
+        <p className="text-sm text-[var(--ramkin-mist)]/55">Welcome</p>
         <h1
-          className="mt-1 text-2xl text-[var(--ramkin-cream)]"
+          className="mt-1 truncate text-2xl text-[var(--ramkin-mist)] sm:text-3xl"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          {displayName || user.phoneNumber || 'Guest'}
+          {identity}
         </h1>
 
         <div className="mt-8">
           <div className="flex items-end justify-between gap-3">
             <p
-              className="text-4xl text-[var(--ramkin-gold)]"
+              className="text-4xl text-[var(--ramkin-gold)] sm:text-5xl"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {purchaseCount}
-              <span className="text-lg text-[var(--ramkin-gold-soft)]/70"> / {required}</span>
+              <span className="text-lg text-[var(--ramkin-gold-soft)]/65"> / {required}</span>
             </p>
-            <p className="max-w-[14rem] text-right text-xs leading-relaxed text-[var(--ramkin-cream)]/55">
+            <p className={`max-w-[14rem] text-right text-xs leading-relaxed ${statusTone(progress)}`}>
               {progress ? statusLabel(progress) : 'Loading stamp card…'}
             </p>
           </div>
 
-          <div className="mt-4 h-2.5 w-full overflow-hidden bg-white/5">
+          <div className="mt-5 h-2.5 w-full overflow-hidden bg-white/6">
             <div
-              className="animate-gold-sheen h-full bg-[var(--ramkin-gold)] transition-all duration-700 ease-out"
+              key={`${purchaseCount}-${required}`}
+              className="stamp-bar-fill animate-gold-sheen h-full bg-[var(--ramkin-gold)]"
               style={{ width: `${pct}%` }}
             />
           </div>
-          <p className="mt-2 text-xs tracking-[0.15em] text-[var(--ramkin-gold-soft)]/70 uppercase">
+          <p className="mt-2 text-xs tracking-[0.14em] text-[var(--ramkin-gold-soft)]/65 uppercase">
             {progress?.remaining ?? required} remaining · buy {required} get next free
           </p>
         </div>
@@ -161,7 +174,7 @@ export function DashboardPage() {
               type="button"
               disabled={busy}
               onClick={() => void onRequestReward()}
-              className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)]/15 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-gold)] uppercase transition hover:bg-[var(--ramkin-gold)]/25 disabled:opacity-50"
+              className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] px-4 py-2.5 text-xs tracking-[0.18em] text-black uppercase transition hover:bg-[var(--ramkin-gold-soft)] disabled:opacity-50"
             >
               {busy ? 'Requesting…' : 'Request reward'}
             </button>
@@ -169,7 +182,7 @@ export function DashboardPage() {
           <button
             type="button"
             onClick={() => void refresh()}
-            className="border border-white/15 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-cream)]/70 uppercase hover:border-[var(--ramkin-gold)]/40 hover:text-[var(--ramkin-gold)]"
+            className="border border-white/15 px-4 py-2.5 text-xs tracking-[0.18em] text-[var(--ramkin-mist)]/70 uppercase transition hover:border-[var(--ramkin-gold)]/40 hover:text-[var(--ramkin-gold)]"
           >
             Refresh
           </button>
@@ -178,13 +191,13 @@ export function DashboardPage() {
 
       {progress?.qrToken ? (
         <section
-          className="animate-fade-up mt-8 border border-white/10 bg-black/30 p-6 text-center"
-          style={{ animationDelay: '120ms' }}
+          className="animate-fade-up mt-6 border border-white/10 bg-black/30 p-5 text-center sm:mt-8 sm:p-6"
+          style={{ animationDelay: '100ms' }}
         >
           <h2 className="text-xs tracking-[0.22em] text-[var(--ramkin-gold-soft)] uppercase">
             Counter QR
           </h2>
-          <p className="mx-auto mt-2 max-w-sm text-xs text-[var(--ramkin-cream)]/50">
+          <p className="mx-auto mt-2 max-w-sm text-xs text-[var(--ramkin-mist)]/48">
             Staff scan this code to look you up — never used to self-stamp.
           </p>
           <div className="mt-5 flex justify-center">
@@ -193,11 +206,11 @@ export function DashboardPage() {
         </section>
       ) : null}
 
-      <nav className="mt-8 flex gap-4 text-sm">
+      <nav className="mt-8 flex gap-5 text-sm">
         <Link to="/profile" className="text-[var(--ramkin-gold)] hover:underline">
           Profile
         </Link>
-        <Link to="/" className="text-[var(--ramkin-cream)]/50 hover:text-[var(--ramkin-gold)]">
+        <Link to="/" className="text-[var(--ramkin-mist)]/45 hover:text-[var(--ramkin-gold)]">
           Home
         </Link>
       </nav>

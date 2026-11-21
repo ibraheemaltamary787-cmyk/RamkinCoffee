@@ -2,19 +2,21 @@ import { Link } from 'react-router-dom';
 import { BRAND } from '@ramkin/shared';
 import { BrandMark } from '../components/BrandMark';
 import { useAuth } from '../auth/AuthContext';
+import { isUsingFirebaseEmulators } from '../services/firebase';
 
 export function LandingPage() {
   const { user } = useAuth();
+  const usingEmulators = isUsingFirebaseEmulators();
 
   return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center px-6 py-16 text-center">
+    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-5 py-16 text-center sm:px-6">
       <div
-        className="pointer-events-none absolute inset-0 opacity-40"
+        className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(201,169,98,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(201,169,98,0.04) 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
-          maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 70%)',
+            'linear-gradient(rgba(212,175,55,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.035) 1px, transparent 1px)',
+          backgroundSize: '56px 56px',
+          maskImage: 'radial-gradient(ellipse at center, black 15%, transparent 72%)',
         }}
         aria-hidden
       />
@@ -24,30 +26,30 @@ export function LandingPage() {
       </div>
 
       <h1
-        className="animate-fade-up relative text-5xl font-semibold tracking-[0.2em] text-[var(--ramkin-gold)] sm:text-6xl"
-        style={{ fontFamily: 'var(--font-display)', animationDelay: '80ms' }}
+        className="animate-fade-up relative text-5xl font-semibold tracking-[0.22em] text-[var(--ramkin-gold)] sm:text-6xl"
+        style={{ fontFamily: 'var(--font-display)', animationDelay: '70ms' }}
       >
         {BRAND.name}
       </h1>
 
       <p
-        className="animate-fade-up animate-gold-sheen relative mt-4 max-w-md text-sm font-light tracking-[0.35em] uppercase text-[var(--ramkin-gold-soft)]/80"
-        style={{ animationDelay: '160ms' }}
+        className="animate-fade-up animate-gold-sheen relative mt-4 max-w-md text-sm font-medium tracking-[0.38em] uppercase text-[var(--ramkin-gold-soft)]/85"
+        style={{ animationDelay: '140ms' }}
       >
         {BRAND.tagline}
       </p>
 
       <p
-        className="animate-fade-up relative mt-8 max-w-lg text-base leading-relaxed text-[var(--ramkin-cream)]/70"
-        style={{ animationDelay: '240ms' }}
+        className="animate-fade-up relative mt-8 max-w-md text-base leading-relaxed text-[var(--ramkin-mist)]/68"
+        style={{ animationDelay: '210ms' }}
       >
-        Join the RAMKIN loyalty circle. Sign in with your phone to track stamps toward your next
-        free drink.
+        Collect stamps toward your next free drink. Staff record every purchase — you track progress
+        and request rewards when ready.
       </p>
 
       <div
-        className="animate-fade-up relative mt-10 flex flex-wrap items-center justify-center gap-4"
-        style={{ animationDelay: '320ms' }}
+        className="animate-fade-up relative mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
+        style={{ animationDelay: '280ms' }}
       >
         {user ? (
           <Link
@@ -66,13 +68,23 @@ export function LandingPage() {
             </Link>
             <Link
               to="/login"
-              className="border border-[var(--ramkin-gold)]/50 px-8 py-3 text-sm font-medium tracking-[0.2em] text-[var(--ramkin-gold)] uppercase transition hover:border-[var(--ramkin-gold)] hover:bg-white/5"
+              className="border border-[var(--ramkin-gold)]/45 px-8 py-3 text-sm font-medium tracking-[0.2em] text-[var(--ramkin-gold)] uppercase transition hover:border-[var(--ramkin-gold)] hover:bg-white/5"
             >
-              Log in
+              Sign in
             </Link>
           </>
         )}
       </div>
+
+      {usingEmulators && !user ? (
+        <p
+          className="animate-fade-up relative mt-8 max-w-sm text-xs leading-relaxed text-[var(--ramkin-mist)]/40"
+          style={{ animationDelay: '360ms' }}
+        >
+          Local emulators: Email/Password works without SMS. Optional phone OTP prints the code in
+          the emulators terminal.
+        </p>
+      ) : null}
     </main>
   );
 }

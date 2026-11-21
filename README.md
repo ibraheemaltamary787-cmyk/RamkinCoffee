@@ -187,10 +187,11 @@ See `scripts/seed-loyalty-demo.outline.md` and `scripts/seed-loyalty-demo.local.
 
 ## Phase 3 — Auth & RBAC
 
-### Customer (phone OTP)
+### Customer (Email/Password — Spark default)
 
-1. Enable **Authentication → Phone** (Blaze typically required for SMS) or Auth Emulator.
+1. Enable **Authentication → Email/Password** (already on for `ramkincoffee`).
 2. Routes: `/` · `/register` · `/login` · `/dashboard` · `/profile`.
+3. Optional phone OTP (Auth Emulator / Console test numbers only): `/register/phone` · `/login/phone`.
 
 ### Staff / admin (email + password)
 

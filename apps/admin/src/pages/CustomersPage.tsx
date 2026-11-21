@@ -35,8 +35,8 @@ export function CustomersPage() {
       >
         Customers
       </h1>
-      <p className="mt-2 text-sm text-[var(--ramkin-cream)]/60">
-        Search by name or phone. Open a profile for combo status and purchase history.
+      <p className="mt-2 text-sm text-[var(--ramkin-mist)]/60">
+        Search by name, email, or phone. Open a profile for combo status and purchase history.
       </p>
 
       <form
@@ -50,7 +50,7 @@ export function CustomersPage() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Name or phone"
+          placeholder="Name, email, or phone"
           className="min-w-[16rem] flex-1 border border-white/15 bg-black/40 px-3 py-2 text-sm outline-none focus:border-[var(--ramkin-gold)]/50"
         />
         <button
@@ -63,39 +63,58 @@ export function CustomersPage() {
       </form>
 
       {submitted ? (
-        <p className="mt-3 text-xs text-[var(--ramkin-cream)]/40">Results for “{submitted}”</p>
+        <p className="mt-3 text-xs text-[var(--ramkin-mist)]/40">Results for “{submitted}”</p>
       ) : null}
       {error ? <p className="mt-4 text-sm text-red-300/90">{error}</p> : null}
 
-      <ul className="mt-6 divide-y divide-white/10 border border-white/10 bg-black/25">
-        {customers.length === 0 ? (
-          <li className="p-4 text-sm text-[var(--ramkin-cream)]/50">No customers found.</li>
-        ) : (
-          customers.map((c) => (
-            <li key={c.customerId}>
-              <Link
-                to={`/app/customers/${c.customerId}`}
-                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 transition hover:bg-[var(--ramkin-gold)]/5"
-              >
-                <div>
-                  <p className="text-[var(--ramkin-cream)]">{c.displayName || 'Customer'}</p>
-                  <p className="text-xs text-[var(--ramkin-cream)]/45">
-                    {c.phone ?? '—'} · {c.status}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-[var(--ramkin-gold)]">
+      <div className="mt-6 overflow-x-auto border border-white/10 bg-black/30">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Contact</th>
+              <th>Status</th>
+              <th>Stamps</th>
+              <th>Combo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {customers.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="text-[var(--ramkin-mist)]/50">
+                  No customers found.
+                </td>
+              </tr>
+            ) : (
+              customers.map((c) => (
+                <tr key={c.customerId}>
+                  <td>
+                    <Link
+                      to={`/app/customers/${c.customerId}`}
+                      className="text-[var(--ramkin-mist)] hover:text-[var(--ramkin-gold)]"
+                    >
+                      {c.displayName || 'Customer'}
+                    </Link>
+                  </td>
+                  <td className="text-[var(--ramkin-mist)]/55">
+                    <div>{c.email ?? '—'}</div>
+                    <div className="text-xs">{c.phone ?? '—'}</div>
+                  </td>
+                  <td className="text-xs tracking-[0.12em] uppercase text-[var(--ramkin-mist)]/50">
+                    {c.status}
+                  </td>
+                  <td className="text-[var(--ramkin-gold)]">
                     {c.purchaseCount}/{c.requiredPurchases}
-                  </p>
-                  <p className="text-[10px] tracking-[0.15em] text-[var(--ramkin-gold-soft)]/60 uppercase">
+                  </td>
+                  <td className="text-[10px] tracking-[0.14em] text-[var(--ramkin-gold-soft)]/65 uppercase">
                     {c.comboStatus ?? 'no combo'}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))
-        )}
-      </ul>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

@@ -25,6 +25,7 @@ export const listOpenRewards = onCall({ cors: true }, async (request) => {
     requestedAt: string | null;
     displayName: string | null;
     phone: string | null;
+    email: string | null;
     purchaseCount: number;
     requiredPurchases: number;
   }> = [];
@@ -53,6 +54,7 @@ export const listOpenRewards = onCall({ cors: true }, async (request) => {
         requestedAt: toIso(data.requestedAt),
         displayName: (customer?.displayName as string | undefined) ?? null,
         phone: (customer?.phone as string | null | undefined) ?? null,
+        email: (customer?.email as string | null | undefined) ?? null,
         purchaseCount: typeof combo?.purchaseCount === 'number' ? combo.purchaseCount : 0,
         requiredPurchases:
           typeof combo?.requiredPurchases === 'number' ? combo.requiredPurchases : 9,
