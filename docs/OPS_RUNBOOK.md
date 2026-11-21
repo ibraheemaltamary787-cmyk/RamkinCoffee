@@ -99,7 +99,9 @@ For compromised OWNER email: use Firebase Console Auth recovery + Google account
 ## Quick command reference (deployed project only)
 
 ```bash
-# After Ibraheem links the real project — never hloe-45d43
+# Project: ramkincoffee — never hloe-45d43
+firebase login
+firebase use ramkincoffee
 firebase deploy --only functions
 firebase deploy --only hosting
 firebase deploy --only firestore:rules,firestore:indexes

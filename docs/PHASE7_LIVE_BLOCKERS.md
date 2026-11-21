@@ -1,8 +1,8 @@
 # Phase 7 — What cannot be verified without live Firebase
 
-Phase 7 delivers automated tests, security checklist results, UAT + staff docs, and a dry-runnable seed script. The following remain **blocked** until Ibraheem creates a **new** RAMKIN Firebase project.
+Phase 7 delivers automated tests, security checklist results, UAT + staff docs, and a dry-runnable seed script. Project ID **`ramkincoffee`** is wired in the repo; the following remain **blocked** until Console web keys (`apiKey`, `appId`), Auth providers, and authenticated CLI deploy are complete.
 
-**Never** create or reuse `hloe-45d43`. Do not invent project ids, API keys, or secrets in the repo.
+**Never** create or reuse `hloe-45d43`. Do not invent API keys, app IDs, or other secrets in the repo.
 
 | Capability | Why blocked | Unblocks when |
 |------------|-------------|----------------|

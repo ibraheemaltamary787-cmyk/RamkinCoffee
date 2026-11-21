@@ -12,10 +12,10 @@
 
 | Check | Result | Evidence |
 |-------|--------|----------|
-| No `hloe-45d43` as active project | **PASS** | `.firebaserc` → `"projects": {}`; unit test `functions/src/security/config.test.ts` |
+| No `hloe-45d43` as active project | **PASS** | `.firebaserc` → `"default": "ramkincoffee"`; unit test `functions/src/security/config.test.ts` |
 | Docs / comments mention hloe only as forbidden | **PASS** | README, `.env.example`, App Check notes |
-| No service-account JSON / private keys committed | **PASS** | `.gitignore` + `.env.example` empty Vite keys only |
-| Real `VITE_FIREBASE_*` not filled in repo | **PASS** | `.env.example` placeholders |
+| No service-account JSON / private keys committed | **PASS** | `.gitignore` + `.env.example` has no private keys |
+| Private web secrets not invented in repo | **PASS** | `.env.example` has public IDs for `ramkincoffee`; `apiKey` / `appId` empty (TODO) |
 
 ---
 
@@ -80,14 +80,14 @@
 
 ---
 
-## G. What cannot be verified until Firebase exists
+## G. What cannot be verified until live deploy on `ramkincoffee`
 
 Documented for UAT blockers (Ibraheem):
 
-1. Create **new** RAMKIN Firebase project (never `hloe-45d43`).  
+1. Project **`ramkincoffee`** is linked in repo — never use `hloe-45d43`.  
 2. Enable Phone Auth + Email/Password; Blaze if SMS required.  
-3. Deploy `firestore.rules`, indexes, Functions; set `BOOTSTRAP_OWNER_SECRET`.  
-4. Fill `VITE_FIREBASE_*` in local `.env` (not committed).  
+3. Provide web **`apiKey`** + **`appId`** (confirm `storageBucket`); fill local `.env`.  
+4. Deploy `firestore.rules`, indexes, Functions; set `BOOTSTRAP_OWNER_SECRET`.  
 5. Hosting (or Hosting preview channel) for customer + admin.  
 6. OTP delivery in target country / test numbers.  
 7. Optional: App Check Console → then `ENFORCE_APP_CHECK=true`.  
