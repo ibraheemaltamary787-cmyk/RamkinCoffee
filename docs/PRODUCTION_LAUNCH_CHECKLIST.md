@@ -1,7 +1,7 @@
 # Production launch checklist — RAMKIN Coffee
 
-**Status:** Docs ready. **Live deploy is blocked** until Ibraheem creates a **new** RAMKIN Firebase project.  
-**Never** create, link, or reuse `hloe-45d43`. Do not invent project IDs, API keys, or secrets in the repo.
+**Status:** Docs ready. Firebase project **`ramkincoffee`** (number `392513147835`) is linked in `.firebaserc`. **Live deploy is blocked** until web `apiKey`/`appId` are provided, Auth/Hosting are configured, and an authenticated CLI runs deploy.  
+**Never** create, link, or reuse `hloe-45d43`. Do not invent API keys, app IDs, or other secrets in the repo.
 
 This checklist is the ordered go-live path. Tick each step in Firebase Console / CLI as you complete it. Companion docs: [OWNER_HANDOVER.md](./OWNER_HANDOVER.md) · [OPS_RUNBOOK.md](./OPS_RUNBOOK.md) · [MONITORING_ALERTS.md](./MONITORING_ALERTS.md) · [PHASE7_LIVE_BLOCKERS.md](./PHASE7_LIVE_BLOCKERS.md).
 
@@ -11,19 +11,19 @@ This checklist is the ordered go-live path. Tick each step in Firebase Console /
 
 - [ ] Phase 7 automated tests green on `main` (`npm test`, CI)
 - [ ] Official logo already in app `public/brand/` trees (do not redraw)
-- [ ] Ibraheem owns Google Cloud / Firebase billing for a **new** project (Blaze for Phone Auth SMS)
-- [ ] Confirm `.firebaserc` still has no foreign project — empty `projects: {}` is expected until linked
-- [ ] Confirm environment Firebase CLI is **not** pointed at `hloe-45d43`
+- [ ] Ibraheem owns Google Cloud / Firebase billing for **`ramkincoffee`** (Blaze for Phone Auth SMS)
+- [x] `.firebaserc` default is `ramkincoffee` (never `hloe-45d43`)
+- [ ] Confirm local Firebase CLI is authenticated and **not** pointed at `hloe-45d43`
 
 ---
 
-## 1. Create Firebase project
+## 1. Firebase project (`ramkincoffee`)
 
-1. [ ] Firebase Console → **Add project** → name something like `ramkin-coffee` (exact ID is Ibraheem’s choice).
+1. [x] Project ID **`ramkincoffee`** / number **`392513147835`** (repo wired).
 2. [ ] Upgrade to **Blaze** (required for Phone Auth SMS + scheduled exports).
 3. [ ] Enable Google Analytics only if Ibraheem wants it (optional).
-4. [ ] In the repo: `firebase login` → `firebase use --add` → select the **new** project → set alias `default`.
-5. [ ] Verify `.firebaserc` now lists **only** the new project ID — never `hloe-45d43`.
+4. [ ] On your machine: `firebase login` → `firebase use ramkincoffee` (alias `default` already in `.firebaserc`).
+5. [x] Verify `.firebaserc` lists **only** `ramkincoffee` — never `hloe-45d43`.
 
 ---
 
@@ -60,7 +60,7 @@ This checklist is the ordered go-live path. Tick each step in Firebase Console /
 ## 4. Web apps + Hosting (customer + admin)
 
 1. [ ] Console → Project settings → **Add app** → Web → create **two** apps (customer + admin) or one shared web app; copy public config.
-2. [ ] Fill `apps/customer/.env` and `apps/admin/.env` from `.env.example` (`VITE_FIREBASE_*` only). **Never** put service-account JSON or `BOOTSTRAP_OWNER_SECRET` in Vite env.
+2. [ ] Copy `.env.example` → `apps/customer/.env` and `apps/admin/.env`. Paste Console **`apiKey`** + **`appId`**; confirm **`storageBucket`** (example uses `ramkincoffee.appspot.com` best-effort). **Never** put service-account JSON or `BOOTSTRAP_OWNER_SECRET` in Vite env.
 3. [ ] Register Hosting targets (once per machine / CI):
 
    ```bash

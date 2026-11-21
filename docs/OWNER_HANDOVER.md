@@ -5,17 +5,20 @@
 
 **Hard ban:** Never reuse Hloe Firebase project `hloe-45d43`.
 
+**Firebase project (confirmed):** `ramkincoffee` · project number `392513147835`  
+Repo `.firebaserc` default alias points at `ramkincoffee`. Public Vite placeholders for projectId / authDomain / messagingSenderId are in `.env.example`. **Still missing from Console:** `apiKey`, `appId`, and confirm `storageBucket`.
+
 ---
 
 ## 1. What Ibraheem must create / own
 
 | Item | Where | Notes |
 |------|-------|-------|
-| New Firebase / GCP project | Firebase Console | Name/ID of your choosing; Blaze for Phone SMS |
-| Billing account | Google Cloud Billing | Linked only to the RAMKIN project |
+| Firebase / GCP project | Firebase Console | **`ramkincoffee`** (already created); Blaze for Phone SMS |
+| Billing account | Google Cloud Billing | Linked only to `ramkincoffee` |
 | OWNER Auth user | Firebase Auth (email/password) | Strong unique password + recovery email |
 | `BOOTSTRAP_OWNER_SECRET` | Firebase Secret Manager / Functions secrets | Random ≥16 chars; **one-shot**; delete after bootstrap |
-| Web app public config | Project settings → Web apps | Copied into gitignored `apps/*/.env` as `VITE_FIREBASE_*` |
+| Web app public config | Project settings → Web apps | Paste **`apiKey` + `appId`** into gitignored `apps/*/.env`; confirm storageBucket |
 | reCAPTCHA v3 site key | App Check | Public; safe in Vite env as `VITE_FIREBASE_APPCHECK_SITE_KEY` |
 | Custom domains + DNS | Registrar + Hosting | Customer + admin hosts |
 | Domain authorized list | Auth → Settings | Must include Hosting + custom domains |
@@ -27,10 +30,10 @@
 ## 2. What engineering already prepared (no secrets)
 
 - Monorepo apps, Functions, rules, indexes, CI
-- `.env.example` documenting **public** Vite keys only
+- `.env.example` with known public IDs for `ramkincoffee` (`projectId`, `authDomain`, `messagingSenderId`); `apiKey` / `appId` left empty (TODO)
+- `.firebaserc` → `"default": "ramkincoffee"` (never `hloe-45d43`)
 - `bootstrapOwner` callable + `scripts/bootstrap-owner.local.ts`
 - Launch checklist, ops runbook, monitoring guide, UAT / staff / backup docs
-- Empty `.firebaserc` until you link the real project (`projects: {}` today)
 
 ---
 
@@ -38,7 +41,8 @@
 
 Copy this list into a **private** password manager entry — do not PR the filled values.
 
-- [ ] Firebase project ID: `________________`
+- [x] Firebase project ID: `ramkincoffee`
+- [ ] Web `apiKey` / `appId` (and confirmed `storageBucket`) from Console → Web app
 - [ ] OWNER login email: `________________`
 - [ ] OWNER password: *(password manager)*
 - [ ] `BOOTSTRAP_OWNER_SECRET`: *(deleted after use — note “rotated on ____”)*
@@ -53,13 +57,23 @@ Copy this list into a **private** password manager entry — do not PR the fille
 
 ## 4. Bootstrap sequence (short)
 
-1. Create project + enable Phone + Email/Password (see [PRODUCTION_LAUNCH_CHECKLIST.md](./PRODUCTION_LAUNCH_CHECKLIST.md)).
-2. Deploy rules, indexes, Functions.
+1. Enable Phone + Email/Password on `ramkincoffee` (see [PRODUCTION_LAUNCH_CHECKLIST.md](./PRODUCTION_LAUNCH_CHECKLIST.md)).
+2. On a machine where you are logged in:
+
+   ```bash
+   firebase login
+   firebase use ramkincoffee
+   npm run build
+   firebase deploy --only firestore:rules,firestore:indexes,functions
+   ```
+
 3. `firebase functions:secrets:set BOOTSTRAP_OWNER_SECRET`
 4. Create OWNER Auth user → admin `/bootstrap` with the secret → confirm `role: OWNER`.
 5. **Delete / rotate** the bootstrap secret the same day.
 6. Invite MANAGER/STAFF via **Accounts** — never share OWNER password.
 7. Enroll App Check before heavy marketing traffic; then `ENFORCE_APP_CHECK=true`.
+
+**Agent blocker:** Cloud agent VMs are **not** authenticated to Firebase (`firebase login` required interactively). Deploy must be run by Ibraheem (or CI with a service account you configure).
 
 ---
 
@@ -68,7 +82,7 @@ Copy this list into a **private** password manager entry — do not PR the fille
 - Service account JSON / private keys  
 - `BOOTSTRAP_OWNER_SECRET`  
 - OWNER passwords / OTP codes  
-- Filled `.env` files  
+- Filled `.env` files with live keys (beyond intentionally public web config once you choose to commit examples)  
 - Anything from `hloe-45d43`
 
 CI and Hosting builds may inject `VITE_FIREBASE_*` as build-time public config; treat Admin SDK credentials as **Functions runtime / Secret Manager only**.
@@ -97,4 +111,4 @@ When live:
 - [ ] Alerts email received for a test (optional)  
 - [ ] Bootstrap secret removed  
 
-Until the Firebase project exists, production remains **awaiting Firebase from Ibraheem**.
+Until `apiKey` / `appId` are provided and CLI deploy succeeds against `ramkincoffee`, production cutover remains blocked on OWNER steps above.

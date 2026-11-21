@@ -24,7 +24,7 @@ Official brand mark (unmodified): `apps/customer/public/brand/ramkin-logo.jpg` (
 - Node.js **20+**
 - npm 10+
 - Firebase CLI (`npm i -g firebase-tools`) when linking a project
-- A **new** Firebase project owned by Ibraheem / RAMKIN (never `hloe-45d43`)
+- Firebase project **`ramkincoffee`** (project number `392513147835`) owned by Ibraheem / RAMKIN (never `hloe-45d43`)
 
 ## Setup
 
@@ -34,7 +34,8 @@ cd RamkinCoffee
 npm install
 cp .env.example apps/customer/.env
 cp .env.example apps/admin/.env
-# Fill VITE_FIREBASE_* from Firebase Console → Project settings → Web app
+# .env.example already has projectId / authDomain / messagingSenderId for ramkincoffee.
+# Paste VITE_FIREBASE_API_KEY + VITE_FIREBASE_APP_ID from Console → Web app; confirm storageBucket.
 ```
 
 ### Scripts
@@ -61,7 +62,7 @@ cp .env.example apps/admin/.env
 | [`docs/OWNER_HANDOVER.md`](docs/OWNER_HANDOVER.md) | What Ibraheem must set; no real secrets in repo |
 | Callable `rotateCustomerQr` | OWNER/MANAGER — invalidate leaked counter QR from customer detail |
 
-**Awaiting Firebase from Ibraheem.** Live Hosting / Auth / Functions deploy is blocked until a new RAMKIN project exists. This environment’s `.firebaserc` has `projects: {}` and Firebase CLI is not linked to any project (including not `hloe-45d43`).
+**Firebase project linked in repo:** `.firebaserc` default is `ramkincoffee` (never `hloe-45d43`). Live Hosting / Auth / Functions deploy still needs Console web config (`apiKey`, `appId`), Auth providers, and an authenticated CLI session (`firebase login` → `firebase use ramkincoffee` → deploy).
 
 ## Phase 7 — Testing, UAT prep, security verification
 
@@ -74,7 +75,7 @@ cp .env.example apps/admin/.env
 | [`docs/PHASE7_LIVE_BLOCKERS.md`](docs/PHASE7_LIVE_BLOCKERS.md) | What needs a real Firebase project |
 | `npx tsx scripts/seed-loyalty-demo.local.ts --dry-run` | Demo fixture plan without secrets |
 
-**Staging Hosting / live OTP UAT is blocked** until Ibraheem creates a new RAMKIN Firebase project (never `hloe-45d43`).
+**Staging Hosting / live OTP UAT is blocked** until web `apiKey`/`appId` are provided, Auth providers are enabled on `ramkincoffee`, and Functions/Hosting are deployed (never `hloe-45d43`).
 
 ## Phase 6 — Reporting, exports, and hardening
 
@@ -199,11 +200,21 @@ See `scripts/seed-loyalty-demo.outline.md` and `scripts/seed-loyalty-demo.local.
 
 ## Firebase project (owner steps)
 
-1. Create a **new** Firebase project (never `hloe-45d43`).
-2. Enable Auth (Phone + Email/Password), Firestore, Functions, Hosting.
-3. Copy public web config into app `.env` files (`VITE_FIREBASE_*` only).
-4. `firebase use --add` → deploy rules, indexes, functions.
-5. (Phase 6+) enroll App Check; optional Firestore scheduled export — see OWNER runbook.
+**Project ID:** `ramkincoffee` · **Project number:** `392513147835` · **Never** `hloe-45d43`.
+
+1. Confirm Blaze + enable Auth (Phone + Email/Password), Firestore, Functions, Hosting.
+2. Console → Project settings → Web app → copy `apiKey` and `appId` into gitignored `apps/*/.env` (projectId / authDomain / messagingSenderId are already in `.env.example`; confirm `storageBucket`).
+3. Authenticated machine:
+
+   ```bash
+   firebase login
+   firebase use ramkincoffee
+   npm run build
+   firebase deploy --only firestore:rules,firestore:indexes,functions
+   # then Hosting after sites/targets + VITE_* filled for the build
+   ```
+
+4. (Phase 6+) enroll App Check; optional Firestore scheduled export — see OWNER runbook.
 
 **Hard rules:** never commit service-account JSON; never put `BOOTSTRAP_OWNER_SECRET` in Vite env.
 
@@ -218,4 +229,4 @@ See `scripts/seed-loyalty-demo.outline.md` and `scripts/seed-loyalty-demo.local.
 | 5 Staff / admin product surfaces       | On `main`                                   |
 | 6 Reports / exports / hardening        | On `main`                                   |
 | 7 Testing / UAT prep / security verify | On `main` (live Firebase still required)    |
-| 8 Production launch prep / handover    | This branch — docs ready; **awaiting Firebase from Ibraheem** |
+| 8 Production launch prep / handover    | On `main` — project `ramkincoffee` wired; go-live needs web keys + CLI deploy |
