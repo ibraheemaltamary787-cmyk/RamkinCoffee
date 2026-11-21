@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "ramkincoffee"
-  }
+  },
+  "targets": {
+    "ramkincoffee": {
+      "hosting": {
+        "customer": [
+          "ramkincoffee"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
