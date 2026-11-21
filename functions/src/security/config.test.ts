@@ -23,14 +23,8 @@ describe('Firebase project hygiene (Phase 7)', () => {
     assert.doesNotMatch(envExample, /BEGIN PRIVATE KEY/);
     // Public web config from Console web app "RAMKIN Web" (not secrets).
     assert.match(envExample, /^VITE_FIREBASE_API_KEY=AIzaSy/m);
-    assert.match(
-      envExample,
-      /^VITE_FIREBASE_APP_ID=1:392513147835:web:[a-f0-9]+$/m,
-    );
-    assert.match(
-      envExample,
-      /^VITE_FIREBASE_STORAGE_BUCKET=ramkincoffee\.firebasestorage\.app$/m,
-    );
+    assert.match(envExample, /^VITE_FIREBASE_APP_ID=1:392513147835:web:[a-f0-9]+$/m);
+    assert.match(envExample, /^VITE_FIREBASE_STORAGE_BUCKET=ramkincoffee\.firebasestorage\.app$/m);
     // Only fail on an uncommented assignment with a real value (comments may show the name).
     assert.doesNotMatch(envExample, /^BOOTSTRAP_OWNER_SECRET=\s*\S+/m);
   });
@@ -49,5 +43,39 @@ describe('Firebase project hygiene (Phase 7)', () => {
     }
     assert.match(rules, /allow create, update, delete: if false/);
     assert.match(rules, /match \/rateLimits\/\{docId\}[\s\S]*allow read, write: if false/);
+  });
+
+  it('firebase.json pins Auth/Functions/Firestore emulator ports for local Spark workflow', () => {
+    const raw = fs.readFileSync(path.join(repoRoot, 'firebase.json'), 'utf8');
+    const parsed = JSON.parse(raw) as {
+      emulators?: Record<string, { host?: string; port?: number; enabled?: boolean }>;
+    };
+    assert.equal(parsed.emulators?.auth?.port, 9099);
+    assert.equal(parsed.emulators?.functions?.port, 5001);
+    assert.equal(parsed.emulators?.firestore?.port, 8080);
+    assert.equal(parsed.emulators?.ui?.enabled, true);
+    assert.equal(parsed.emulators?.ui?.port, 4000);
+    assert.match(raw, /"host": "127\.0\.0\.1"/);
+  });
+
+  it('documents emulator workflow and local bootstrap secret example', () => {
+    const emulatorDoc = fs.readFileSync(
+      path.join(repoRoot, 'docs/FIREBASE_EMULATOR_DEV.md'),
+      'utf8',
+    );
+    assert.match(emulatorDoc, /VITE_USE_FIREBASE_EMULATORS=true/);
+    assert.match(emulatorDoc, /npm run emulators/);
+    assert.match(emulatorDoc, /seed:emulator/);
+    assert.match(emulatorDoc, /No Blaze/);
+
+    const secretExample = fs.readFileSync(
+      path.join(repoRoot, 'functions/.secret.local.example'),
+      'utf8',
+    );
+    assert.match(secretExample, /^BOOTSTRAP_OWNER_SECRET=.+/m);
+    assert.doesNotMatch(secretExample, /hloe-45d43/);
+
+    const envExample = fs.readFileSync(path.join(repoRoot, '.env.example'), 'utf8');
+    assert.match(envExample, /^VITE_USE_FIREBASE_EMULATORS=true$/m);
   });
 });

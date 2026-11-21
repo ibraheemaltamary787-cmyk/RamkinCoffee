@@ -1,28 +1,41 @@
 /**
  * Local Admin SDK helper to bootstrap the first OWNER.
- * Requires GOOGLE_APPLICATION_CREDENTIALS pointing at a gitignored
- * RAMKIN service-account JSON. Never point at hloe-45d43.
  *
- * Usage:
+ * Prefer emulators on Spark keep-free (no Blaze / no production ADC required):
+ *   npx tsx scripts/bootstrap-owner.local.ts --emulator --uid <AUTH_UID>
+ *
+ * Staging ADC (gitignored service account for ramkincoffee only):
  *   npx tsx scripts/bootstrap-owner.local.ts --uid <AUTH_UID>
+ *
+ * Never point at hloe-45d43. Never invent Firebase projects or secrets into the repo.
  */
-import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import {
+  argValue,
+  assertNotHloe,
+  hasFlag,
+  initAdminApp,
+  resolveProjectId,
+} from './firebase-admin-local';
 
-function readUid(): string {
-  const idx = process.argv.indexOf('--uid');
-  const uid = idx >= 0 ? process.argv[idx + 1] : undefined;
+function readUid(argv: string[]): string {
+  const uid = argValue(argv, '--uid');
   if (!uid) {
-    console.error('Usage: npx tsx scripts/bootstrap-owner.local.ts --uid <AUTH_UID>');
+    console.error('Usage: npx tsx scripts/bootstrap-owner.local.ts [--emulator] --uid <AUTH_UID>');
     process.exit(1);
   }
   return uid;
 }
 
 async function main(): Promise<void> {
-  const uid = readUid();
-  initializeApp({ credential: applicationDefault() });
+  const argv = process.argv.slice(2);
+  const emulator = hasFlag(argv, '--emulator');
+  const uid = readUid(argv);
+
+  initAdminApp({ emulator });
+  const projectId = resolveProjectId();
+  assertNotHloe(projectId);
 
   const db = getFirestore();
   const owners = await db.collection('users').where('role', '==', 'OWNER').limit(1).get();
@@ -61,11 +74,17 @@ async function main(): Promise<void> {
     action: 'role.bootstrap_owner',
     entityType: 'user',
     entityId: uid,
-    metadata: { via: 'local-script', email: user.email },
+    metadata: {
+      via: emulator ? 'local-script-emulator' : 'local-script',
+      email: user.email,
+      projectId,
+    },
     createdAt: now,
   });
 
-  console.log(`OWNER claim set for ${uid} (${user.email}). Force token refresh on next login.`);
+  console.log(
+    `OWNER claim set for ${uid} (${user.email}) on ${projectId}${emulator ? ' [emulator]' : ''}. Force token refresh on next login.`,
+  );
 }
 
 main().catch((err) => {

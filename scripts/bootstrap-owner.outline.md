@@ -39,9 +39,25 @@ Custom claims are set **only** via Admin SDK (Cloud Functions). Clients never se
 - Writes `activityLogs` action `role.bootstrap_owner`.
 - Never accepts `role` from the client body.
 
-## Local script alternative (outline)
+## Local / emulator alternatives
 
-With Application Default Credentials / a **local** service-account JSON that is **gitignored**:
+### Spark keep-free (Functions emulator + `.secret.local`)
+
+Preferred while staying off Blaze — see [`docs/FIREBASE_EMULATOR_DEV.md`](../docs/FIREBASE_EMULATOR_DEV.md):
+
+1. `cp functions/.secret.local.example functions/.secret.local`
+2. `npm run emulators` + admin app with `VITE_USE_FIREBASE_EMULATORS=true`
+3. Create email/password user in Emulator UI → sign in → `/bootstrap` with the local secret
+
+Or Admin SDK against emulators (no ADC):
+
+```bash
+npx tsx scripts/bootstrap-owner.local.ts --emulator --uid <OWNER_UID>
+```
+
+### Staging ADC
+
+With Application Default Credentials / a **local** service-account JSON that is **gitignored** (ramkincoffee only):
 
 ```bash
 # Example only — do not commit keys
@@ -49,4 +65,4 @@ GOOGLE_APPLICATION_CREDENTIALS=./secrets/ramkin-sa.json \
   npx tsx scripts/bootstrap-owner.local.ts --uid <OWNER_UID>
 ```
 
-`scripts/bootstrap-owner.local.ts` is a thin Admin SDK helper; prefer the callable in staging/production so the secret gate and “one OWNER” check stay centralized.
+Prefer the callable in staging/production so the secret gate and “one OWNER” check stay centralized.

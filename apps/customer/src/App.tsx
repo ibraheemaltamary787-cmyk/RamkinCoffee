@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import { ConfigBanner } from './components/ConfigBanner';
+import { EmulatorBanner } from './components/EmulatorBanner';
 import { LandingPage } from './pages/LandingPage';
 import { PhoneAuthPage } from './pages/PhoneAuthPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -10,6 +11,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <EmulatorBanner />
         <ConfigBanner />
         <Routes>
           <Route path="/" element={<LandingPage />} />

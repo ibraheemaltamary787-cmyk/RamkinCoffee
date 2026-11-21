@@ -1,9 +1,5 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import {
-  initializeAppCheck,
-  ReCaptchaV3Provider,
-  type AppCheck,
-} from 'firebase/app-check';
+import { initializeAppCheck, ReCaptchaV3Provider, type AppCheck } from 'firebase/app-check';
 import { connectAuthEmulator, getAuth, type Auth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore, type Firestore } from 'firebase/firestore';
 import { connectFunctionsEmulator, getFunctions, type Functions } from 'firebase/functions';
@@ -22,6 +18,11 @@ const appCheckSiteKey = import.meta.env.VITE_FIREBASE_APPCHECK_SITE_KEY ?? '';
 
 export function isFirebaseConfigured(): boolean {
   return Boolean(config.apiKey && config.projectId && config.appId && config.authDomain);
+}
+
+/** True when Vite env opts into local Auth / Firestore / Functions emulators. */
+export function isUsingFirebaseEmulators(): boolean {
+  return import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true';
 }
 
 let app: FirebaseApp | null = null;
