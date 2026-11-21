@@ -1,6 +1,6 @@
 # Phase 7 — What cannot be verified without live Firebase
 
-Phase 7 delivers automated tests, security checklist results, UAT + staff docs, and a dry-runnable seed script. Project ID **`ramkincoffee`** is wired in the repo; the following remain **blocked** until Console web keys (`apiKey`, `appId`), Auth providers, and authenticated CLI deploy are complete.
+Phase 7 delivers automated tests, security checklist results, UAT + staff docs, and a dry-runnable seed script. Project ID **`ramkincoffee`** is wired in the repo; the following remain **blocked** until Console web keys (`apiKey`, `appId`), Auth providers, and authenticated CLI deploy are complete. See [`FIREBASE_COST_REPORT.md`](./FIREBASE_COST_REPORT.md) — **Cloud Functions v2 require Blaze**; production Phone SMS bills; Spark-only path is Email/Password + emulators + Hosting prep without Functions deploy.
 
 **Never** create or reuse `hloe-45d43`. Do not invent API keys, app IDs, or other secrets in the repo.
 

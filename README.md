@@ -62,7 +62,7 @@ cp .env.example apps/admin/.env
 | [`docs/OWNER_HANDOVER.md`](docs/OWNER_HANDOVER.md) | What Ibraheem must set; no real secrets in repo |
 | Callable `rotateCustomerQr` | OWNER/MANAGER — invalidate leaked counter QR from customer detail |
 
-**Firebase project linked in repo:** `.firebaserc` default is `ramkincoffee` (never `hloe-45d43`). Live Hosting / Auth / Functions deploy still needs Console web config (`apiKey`, `appId`), Auth providers, and an authenticated CLI session (`firebase login` → `firebase use ramkincoffee` → deploy).
+**Firebase project linked in repo:** `.firebaserc` default is `ramkincoffee` (never `hloe-45d43`). Live Hosting / Auth / Functions deploy still needs Console web config (`apiKey`, `appId`), Auth providers, and an authenticated CLI session (`firebase login` → `firebase use ramkincoffee` → deploy). Cost / Spark vs Blaze gates: [`docs/FIREBASE_COST_REPORT.md`](docs/FIREBASE_COST_REPORT.md) — **do not upgrade to Blaze or enable paid SMS without OWNER approval**.
 
 ## Phase 7 — Testing, UAT prep, security verification
 
