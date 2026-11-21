@@ -1,19 +1,18 @@
 /**
- * Staging demo seed for RAMKIN loyalty UAT.
+ * Staging / emulator demo seed for RAMKIN loyalty UAT.
  *
  * Never point at hloe-45d43. Never invent Firebase projects or secrets.
- * Requires GOOGLE_APPLICATION_CREDENTIALS (gitignored) for a *RAMKIN* project,
- * or pass --dry-run to print the fixture plan without writing.
  *
- * Usage:
- *   npx tsx scripts/seed-loyalty-demo.local.ts --dry-run
+ * Spark keep-free (preferred): Auth + Firestore emulators — no ADC, no Blaze.
+ *   npx tsx scripts/seed-loyalty-demo.local.ts --emulator --dry-run
+ *   npx tsx scripts/seed-loyalty-demo.local.ts --emulator --phone +15550109999 --n 3
+ *
+ * Staging ADC (gitignored credentials for ramkincoffee only):
  *   npx tsx scripts/seed-loyalty-demo.local.ts --phone +15550109999 --n 3
- *   npx tsx scripts/seed-loyalty-demo.local.ts --phone +15550109999 --n 2 --stop-at approved
  *
  * --stop-at: purchases | requested | approved | redeemed (default: approved)
  */
 import { randomUUID } from 'node:crypto';
-import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import {
@@ -25,31 +24,32 @@ import {
   createQrToken,
   normalizePhone,
 } from '../packages/shared/src/index';
+import {
+  assertNotHloe,
+  argValue,
+  hasFlag,
+  initAdminApp,
+  resolveProjectId,
+} from './firebase-admin-local';
 
 type StopAt = 'purchases' | 'requested' | 'approved' | 'redeemed';
 
-function argValue(flag: string): string | undefined {
-  const idx = process.argv.indexOf(flag);
-  return idx >= 0 ? process.argv[idx + 1] : undefined;
-}
-
-function hasFlag(flag: string): boolean {
-  return process.argv.includes(flag);
-}
-
 function parseArgs(): {
   dryRun: boolean;
+  emulator: boolean;
   phone: string;
   n: number;
   stopAt: StopAt;
   displayName: string;
 } {
-  const dryRun = hasFlag('--dry-run');
-  const phoneRaw = argValue('--phone') ?? '+15550109999';
+  const argv = process.argv.slice(2);
+  const dryRun = hasFlag(argv, '--dry-run');
+  const emulator = hasFlag(argv, '--emulator');
+  const phoneRaw = argValue(argv, '--phone') ?? '+15550109999';
   const phone = normalizePhone(phoneRaw);
-  const n = Number(argValue('--n') ?? '3');
-  const stopAt = (argValue('--stop-at') ?? 'approved') as StopAt;
-  const displayName = argValue('--name') ?? 'Demo Guest';
+  const n = Number(argValue(argv, '--n') ?? '3');
+  const stopAt = (argValue(argv, '--stop-at') ?? 'approved') as StopAt;
+  const displayName = argValue(argv, '--name') ?? 'Demo Guest';
 
   if (!Number.isInteger(n) || n < 1 || n > 100) {
     throw new Error('--n must be an integer 1–100 (use a small N for short demos).');
@@ -60,7 +60,7 @@ function parseArgs(): {
   if (!/^\+[0-9]{8,18}$/.test(phone)) {
     throw new Error('--phone must be E.164 digits with leading +');
   }
-  return { dryRun, phone, n, stopAt, displayName };
+  return { dryRun, emulator, phone, n, stopAt, displayName };
 }
 
 function printPlan(opts: ReturnType<typeof parseArgs>): void {
@@ -71,6 +71,7 @@ phone:        ${opts.phone}
 displayName:  ${opts.displayName}
 N (stamps):   ${opts.n}  (settings.purchasesRequired for this demo combo)
 stop-at:      ${opts.stopAt}
+emulator:     ${opts.emulator}
 dry-run:      ${opts.dryRun}
 
 Steps:
@@ -80,12 +81,16 @@ Steps:
   4. Record ${opts.n} purchases with unique idempotency keys → combo completed
   5. Optionally request → approve → redeem per --stop-at
 
+Prereqs:
+  - Emulator path: firebase emulators running (auth + firestore); no ADC
+  - Staging path: GOOGLE_APPLICATION_CREDENTIALS for ramkincoffee only
+
 UAT next:
   - Admin Counter: lookup ${opts.phone} or scan QR
   - Customer dashboard: progress / reward status
   - Reports: export after redeem
 
-Hard rules: never hloe-45d43; never commit service-account JSON.
+Hard rules: never hloe-45d43; never commit service-account JSON; no Blaze for emulator path.
 `);
 }
 
@@ -94,19 +99,17 @@ async function main(): Promise<void> {
   printPlan(opts);
 
   if (opts.dryRun) {
-    console.log('Dry-run only — no Firebase writes. Remove --dry-run when staging ADC is ready.');
+    console.log(
+      opts.emulator
+        ? 'Dry-run only — no writes. Start emulators, then re-run without --dry-run.'
+        : 'Dry-run only — no Firebase writes. Remove --dry-run when staging ADC is ready.',
+    );
     return;
   }
 
-  initializeApp({ credential: applicationDefault() });
-  const projectId =
-    process.env.GCLOUD_PROJECT ||
-    process.env.GOOGLE_CLOUD_PROJECT ||
-    process.env.GCP_PROJECT ||
-    '';
-  if (projectId === 'hloe-45d43') {
-    throw new Error('Refusing to seed hloe-45d43 — create a RAMKIN Firebase project first.');
-  }
+  initAdminApp({ emulator: opts.emulator });
+  const projectId = resolveProjectId();
+  assertNotHloe(projectId);
 
   const auth = getAuth();
   const db = getFirestore();
@@ -139,39 +142,33 @@ async function main(): Promise<void> {
   const comboRef = db.collection('combos').doc();
   const now = FieldValue.serverTimestamp();
 
-  await db
-    .collection('users')
-    .doc(user.uid)
-    .set(
-      {
-        role: 'CUSTOMER',
-        displayName: opts.displayName,
-        phone: opts.phone,
-        email: null,
-        status: 'active',
-        createdAt: now,
-        updatedAt: now,
-        lastLoginAt: null,
-      },
-      { merge: true },
-    );
+  await db.collection('users').doc(user.uid).set(
+    {
+      role: 'CUSTOMER',
+      displayName: opts.displayName,
+      phone: opts.phone,
+      email: null,
+      status: 'active',
+      createdAt: now,
+      updatedAt: now,
+      lastLoginAt: null,
+    },
+    { merge: true },
+  );
 
-  await db
-    .collection('customers')
-    .doc(user.uid)
-    .set(
-      {
-        uid: user.uid,
-        phone: opts.phone,
-        displayName: opts.displayName,
-        qrToken,
-        currentComboId: comboRef.id,
-        totalPurchases: 0,
-        totalRewardsRedeemed: 0,
-        createdAt: now,
-      },
-      { merge: true },
-    );
+  await db.collection('customers').doc(user.uid).set(
+    {
+      uid: user.uid,
+      phone: opts.phone,
+      displayName: opts.displayName,
+      qrToken,
+      currentComboId: comboRef.id,
+      totalPurchases: 0,
+      totalRewardsRedeemed: 0,
+      createdAt: now,
+    },
+    { merge: true },
+  );
 
   let combo = {
     id: comboRef.id,
@@ -198,16 +195,19 @@ async function main(): Promise<void> {
     const transition = applyPurchaseToCombo(combo);
     const idempotencyKey = `seed-${user.uid.slice(0, 8)}-${randomUUID()}`;
     purchaseIds.push(idempotencyKey);
-    await db.collection('purchases').doc(idempotencyKey).set({
-      customerId: user.uid,
-      comboId: combo.id,
-      recordedBy: 'seed-loyalty-demo',
-      amount: null,
-      note: `seed stamp ${i + 1}/${opts.n}`,
-      idempotencyKey,
-      clientRequestId: null,
-      createdAt: FieldValue.serverTimestamp(),
-    });
+    await db
+      .collection('purchases')
+      .doc(idempotencyKey)
+      .set({
+        customerId: user.uid,
+        comboId: combo.id,
+        recordedBy: 'seed-loyalty-demo',
+        amount: null,
+        note: `seed stamp ${i + 1}/${opts.n}`,
+        idempotencyKey,
+        clientRequestId: null,
+        createdAt: FieldValue.serverTimestamp(),
+      });
     combo = {
       ...combo,
       purchaseCount: transition.purchaseCount,
@@ -324,7 +324,8 @@ async function main(): Promise<void> {
     JSON.stringify(
       {
         ok: true,
-        projectId: projectId || '(from ADC)',
+        projectId,
+        emulator: opts.emulator,
         customerId: user.uid,
         phone: opts.phone,
         qrToken,

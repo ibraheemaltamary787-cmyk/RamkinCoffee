@@ -21,9 +21,8 @@ Official brand mark (unmodified): `apps/customer/public/brand/ramkin-logo.jpg` (
 
 ## Prerequisites
 
-- Node.js **20+**
+- Node.js **22+** (Functions emulator requires engine `22`; also installed via `npm install` as `firebase-tools`)
 - npm 10+
-- Firebase CLI (`npm i -g firebase-tools`) when linking a project
 - Firebase project **`ramkincoffee`** (project number `392513147835`) owned by Ibraheem / RAMKIN (never `hloe-45d43`)
 
 ## Setup
@@ -40,53 +39,60 @@ cp .env.example apps/admin/.env
 
 ### Scripts
 
-| Command                | Purpose                                     |
-| ---------------------- | ------------------------------------------- |
-| `npm install`          | Install all workspaces                      |
-| `npm run dev:customer` | Customer app on http://localhost:5173       |
-| `npm run dev:admin`    | Admin app on http://localhost:5174          |
-| `npm run build`        | Build shared → apps → functions             |
-| `npm run build:apps`   | Build shared + both Vite apps               |
-| `npm run typecheck`    | Typecheck all packages                      |
-| `npm run lint`         | ESLint                                      |
-| `npm test`             | Unit tests (loyalty, RBAC, security hygiene)|
-| `npm run format`       | Prettier write                              |
+| Command                     | Purpose                                                         |
+| --------------------------- | --------------------------------------------------------------- |
+| `npm install`               | Install all workspaces + firebase-tools                         |
+| `npm run emulators`         | Build Functions + Auth/Functions/Firestore emulators (UI :4000) |
+| `npm run emulators:all`     | Same + Hosting emulator (local only — not production publish)   |
+| `npm run seed:emulator`     | Seed loyalty demo against Auth/Firestore emulators              |
+| `npm run seed:emulator:dry` | Print seed plan (no writes)                                     |
+| `npm run dev:customer`      | Customer app on http://localhost:5173                           |
+| `npm run dev:admin`         | Admin app on http://localhost:5174                              |
+| `npm run build`             | Build shared → apps → functions                                 |
+| `npm run build:apps`        | Build shared + both Vite apps                                   |
+| `npm run build:functions`   | Build Functions TypeScript only                                 |
+| `npm run typecheck`         | Typecheck all packages                                          |
+| `npm run lint`              | ESLint                                                          |
+| `npm test`                  | Unit tests (loyalty, RBAC, security hygiene)                    |
+| `npm run format`            | Prettier write                                                  |
+
+**Spark keep-free local stack:** copy `.env.example` → each app `.env` (includes `VITE_USE_FIREBASE_EMULATORS=true`), copy `functions/.secret.local.example` → `functions/.secret.local`, then `npm run emulators` + `dev:customer` / `dev:admin`. Exact steps: [`docs/FIREBASE_EMULATOR_DEV.md`](docs/FIREBASE_EMULATOR_DEV.md).
 
 ## Phase 8 — Production launch prep (docs + ops)
 
-| Artifact | Purpose |
-|----------|---------|
+| Artifact                                                                     | Purpose                                                                  |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | [`docs/PRODUCTION_LAUNCH_CHECKLIST.md`](docs/PRODUCTION_LAUNCH_CHECKLIST.md) | Firebase → Auth → deploy → Hosting → domains → App Check → OWNER → smoke |
-| [`docs/OPS_RUNBOOK.md`](docs/OPS_RUNBOOK.md) | Change N, invite staff, rotate QR, export, disable accounts, incidents |
-| [`docs/MONITORING_ALERTS.md`](docs/MONITORING_ALERTS.md) | Functions errors, Auth spikes, budgets — Console steps + YAML sketch |
-| [`docs/OWNER_HANDOVER.md`](docs/OWNER_HANDOVER.md) | What Ibraheem must set; no real secrets in repo |
-| Callable `rotateCustomerQr` | OWNER/MANAGER — invalidate leaked counter QR from customer detail |
+| [`docs/OPS_RUNBOOK.md`](docs/OPS_RUNBOOK.md)                                 | Change N, invite staff, rotate QR, export, disable accounts, incidents   |
+| [`docs/MONITORING_ALERTS.md`](docs/MONITORING_ALERTS.md)                     | Functions errors, Auth spikes, budgets — Console steps + YAML sketch     |
+| [`docs/OWNER_HANDOVER.md`](docs/OWNER_HANDOVER.md)                           | What Ibraheem must set; no real secrets in repo                          |
+| Callable `rotateCustomerQr`                                                  | OWNER/MANAGER — invalidate leaked counter QR from customer detail        |
 
 **Firebase project linked in repo:** `.firebaserc` default is `ramkincoffee` (never `hloe-45d43`). Live Hosting / Auth / Functions deploy still needs Console web config (`apiKey`, `appId`), Auth providers, and an authenticated CLI session (`firebase login` → `firebase use ramkincoffee` → deploy). Cost / Spark vs Blaze gates: [`docs/FIREBASE_COST_REPORT.md`](docs/FIREBASE_COST_REPORT.md) — **do not upgrade to Blaze or enable paid SMS without OWNER approval**. Free local path: [`docs/FIREBASE_EMULATOR_DEV.md`](docs/FIREBASE_EMULATOR_DEV.md) (Auth/Functions/Firestore emulators + test phone notes).
 
 ## Phase 7 — Testing, UAT prep, security verification
 
-| Artifact | Purpose |
-|----------|---------|
-| Expanded unit tests | Loyalty state machine + Architecture RBAC matrix + App Check / config hygiene |
-| [`docs/SECURITY_CHECKLIST.md`](docs/SECURITY_CHECKLIST.md) | Pass/fail vs codebase + residual risks |
-| [`docs/UAT_SCRIPT.md`](docs/UAT_SCRIPT.md) | register→stamp→request→approve→redeem→report |
-| [`docs/STAFF_TRAINING.md`](docs/STAFF_TRAINING.md) | One-pager: stamp, approve, reject, redeem, phone/QR |
-| [`docs/PHASE7_LIVE_BLOCKERS.md`](docs/PHASE7_LIVE_BLOCKERS.md) | What needs a real Firebase project |
-| `npx tsx scripts/seed-loyalty-demo.local.ts --dry-run` | Demo fixture plan without secrets |
+| Artifact                                                       | Purpose                                                                       |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Expanded unit tests                                            | Loyalty state machine + Architecture RBAC matrix + App Check / config hygiene |
+| [`docs/SECURITY_CHECKLIST.md`](docs/SECURITY_CHECKLIST.md)     | Pass/fail vs codebase + residual risks                                        |
+| [`docs/UAT_SCRIPT.md`](docs/UAT_SCRIPT.md)                     | register→stamp→request→approve→redeem→report                                  |
+| [`docs/STAFF_TRAINING.md`](docs/STAFF_TRAINING.md)             | One-pager: stamp, approve, reject, redeem, phone/QR                           |
+| [`docs/PHASE7_LIVE_BLOCKERS.md`](docs/PHASE7_LIVE_BLOCKERS.md) | What needs a real Firebase project                                            |
+| `npx tsx scripts/seed-loyalty-demo.local.ts --dry-run`         | Demo fixture plan without secrets                                             |
 
 **Staging Hosting / live OTP UAT is blocked** until web `apiKey`/`appId` are provided, Auth providers are enabled on `ramkincoffee`, and Functions/Hosting are deployed (never `hloe-45d43`).
 
 ## Phase 6 — Reporting, exports, and hardening
 
-| Route / artifact                         | Who             | Purpose                                              |
-| ---------------------------------------- | --------------- | ---------------------------------------------------- |
-| `/app/reports`                           | OWNER / MANAGER | Date / status / search filters; Excel + PDF + print  |
-| Customer detail **Print history**        | staff+          | Print-friendly individual history                    |
-| Callable `exportReport`                  | OWNER / MANAGER | Authorized data → xlsx / pdf / json preview          |
-| `docs/SECURITY_RULES_REVIEW.md`          | ops             | Rules matrix + penetration-style checklist           |
-| `docs/OWNER_BACKUP_EXPORT.md`            | OWNER           | Backup / export runbook                             |
-| App Check stubs + `rateLimits`           | platform        | Soft until Console setup; QR + export throttles      |
+| Route / artifact                  | Who             | Purpose                                             |
+| --------------------------------- | --------------- | --------------------------------------------------- |
+| `/app/reports`                    | OWNER / MANAGER | Date / status / search filters; Excel + PDF + print |
+| Customer detail **Print history** | staff+          | Print-friendly individual history                   |
+| Callable `exportReport`           | OWNER / MANAGER | Authorized data → xlsx / pdf / json preview         |
+| `docs/SECURITY_RULES_REVIEW.md`   | ops             | Rules matrix + penetration-style checklist          |
+| `docs/OWNER_BACKUP_EXPORT.md`     | OWNER           | Backup / export runbook                             |
+| App Check stubs + `rateLimits`    | platform        | Soft until Console setup; QR + export throttles     |
 
 ### Export callable
 
@@ -220,13 +226,13 @@ See `scripts/seed-loyalty-demo.outline.md` and `scripts/seed-loyalty-demo.local.
 
 ## Phase status
 
-| Phase                                  | Status                                      |
-| -------------------------------------- | ------------------------------------------- |
-| 1 Docs / architecture                  | Approved                                    |
-| 2 Repo + tooling + Firebase foundation | On `main`                                   |
-| 3 Auth / RBAC                          | On `main`                                   |
-| 4 Loyalty engine                       | On `main`                                   |
-| 5 Staff / admin product surfaces       | On `main`                                   |
-| 6 Reports / exports / hardening        | On `main`                                   |
-| 7 Testing / UAT prep / security verify | On `main` (live Firebase still required)    |
+| Phase                                  | Status                                                                        |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| 1 Docs / architecture                  | Approved                                                                      |
+| 2 Repo + tooling + Firebase foundation | On `main`                                                                     |
+| 3 Auth / RBAC                          | On `main`                                                                     |
+| 4 Loyalty engine                       | On `main`                                                                     |
+| 5 Staff / admin product surfaces       | On `main`                                                                     |
+| 6 Reports / exports / hardening        | On `main`                                                                     |
+| 7 Testing / UAT prep / security verify | On `main` (live Firebase still required)                                      |
 | 8 Production launch prep / handover    | On `main` — project `ramkincoffee` wired; go-live needs web keys + CLI deploy |
