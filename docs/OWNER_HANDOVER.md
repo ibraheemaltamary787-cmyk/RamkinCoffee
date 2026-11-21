@@ -6,7 +6,7 @@
 **Hard ban:** Never reuse Hloe Firebase project `hloe-45d43`.
 
 **Firebase project (confirmed):** `ramkincoffee` · project number `392513147835`  
-Repo `.firebaserc` default alias points at `ramkincoffee`. Public Vite placeholders for projectId / authDomain / messagingSenderId are in `.env.example`. **Still missing from Console:** `apiKey`, `appId`, and confirm `storageBucket`.
+Repo `.firebaserc` default alias points at `ramkincoffee`. Public Vite config for Web app **RAMKIN Web** (including `apiKey`, `appId`, `storageBucket=ramkincoffee.firebasestorage.app`) is in `.env.example`. Console: Spark plan; Email/Password enabled; Phone/SMS off; Storage/Functions need Blaze (not enabled). See [`FIREBASE_COST_REPORT.md`](./FIREBASE_COST_REPORT.md).
 
 ---
 
