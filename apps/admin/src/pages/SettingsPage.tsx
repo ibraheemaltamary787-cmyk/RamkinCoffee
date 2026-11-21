@@ -53,14 +53,14 @@ export function SettingsPage() {
       >
         Loyalty settings
       </h1>
-      <p className="mt-2 text-sm text-[var(--ramkin-cream)]/60">
+      <p className="mt-2 text-sm text-[var(--ramkin-mist)]/60">
         Default is buy 9, 10th free. Changing N only affects <em>new</em> combos (snapshot on
         start).
       </p>
 
       <form onSubmit={(e) => void onSave(e)} className="mt-8 space-y-5">
         <label className="block">
-          <span className="text-xs tracking-[0.2em] text-[var(--ramkin-cream)]/45 uppercase">
+          <span className="text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
             Purchases required (N)
           </span>
           <input
@@ -74,7 +74,7 @@ export function SettingsPage() {
           />
         </label>
 
-        <label className="flex items-center gap-3 text-sm text-[var(--ramkin-cream)]/75">
+        <label className="flex items-center gap-3 text-sm text-[var(--ramkin-mist)]/75">
           <input
             type="checkbox"
             checked={staffCanApproveRewards}
@@ -93,7 +93,7 @@ export function SettingsPage() {
             {busy ? 'Saving…' : 'Save settings'}
           </button>
         ) : (
-          <p className="text-xs text-[var(--ramkin-cream)]/45">
+          <p className="text-xs text-[var(--ramkin-mist)]/45">
             Only OWNER can change these values.
           </p>
         )}

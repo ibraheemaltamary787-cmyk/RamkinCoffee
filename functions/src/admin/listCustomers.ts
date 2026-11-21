@@ -54,6 +54,7 @@ export const listCustomers = onCall({ cors: true }, async (request) => {
       customerId: doc.id,
       displayName: String(data.displayName ?? ''),
       phone: (data.phone as string | null | undefined) ?? null,
+      email: (data.email as string | null | undefined) ?? null,
       status: ((user?.status as UserStatus | undefined) ?? 'active') as UserStatus,
       currentComboId: comboId,
       comboStatus,

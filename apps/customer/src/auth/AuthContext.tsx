@@ -79,25 +79,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole(await readRole(user));
   }, [user]);
 
-  const ensureProfile = useCallback(
-    async (name?: string) => {
-      if (!user) throw new Error('Not signed in');
-      const result = await callEnsureCustomerProfile(name ? { displayName: name } : {});
-      setDisplayName(result.profile.displayName);
-      if (result.claimsRefreshRequired) {
-        await user.getIdToken(true);
-        setRole(await readRole(user));
-      } else {
-        setRole('CUSTOMER');
-      }
-      try {
-        await callRecordLogin();
-      } catch {
-        // Login audit is best-effort until Functions are deployed.
-      }
-    },
-    [user],
-  );
+  const ensureProfile = useCallback(async (name?: string) => {
+    const current = getFirebaseAuth().currentUser;
+    if (!current) throw new Error('Not signed in');
+    const result = await callEnsureCustomerProfile(name ? { displayName: name } : {});
+    setDisplayName(result.profile.displayName);
+    if (result.claimsRefreshRequired) {
+      await current.getIdToken(true);
+      setRole(await readRole(current));
+    } else {
+      setRole('CUSTOMER');
+    }
+    try {
+      await callRecordLogin();
+    } catch {
+      // Login audit is best-effort until Functions emulator / deploy is available.
+    }
+  }, []);
 
   const signOut = useCallback(async () => {
     if (!configured) return;

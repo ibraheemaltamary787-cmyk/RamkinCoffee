@@ -44,7 +44,7 @@ export function CustomerQr({ token }: CustomerQrProps) {
   }
 
   if (!dataUrl) {
-    return <p className="text-xs text-[var(--ramkin-cream)]/40">Preparing QR…</p>;
+    return <p className="text-xs text-[var(--ramkin-mist)]/40">Preparing QR…</p>;
   }
 
   return (
@@ -52,9 +52,9 @@ export function CustomerQr({ token }: CustomerQrProps) {
       <img
         src={dataUrl}
         alt="Your counter QR code"
-        className="h-48 w-48 border border-[var(--ramkin-gold)]/30 bg-[var(--ramkin-cream)] p-2"
+        className="h-48 w-48 border border-[var(--ramkin-gold)]/30 bg-[var(--ramkin-mist)] p-2"
       />
-      <p className="max-w-[14rem] break-all text-center text-[10px] tracking-[0.12em] text-[var(--ramkin-cream)]/40 uppercase">
+      <p className="max-w-[14rem] break-all text-center text-[10px] tracking-[0.12em] text-[var(--ramkin-mist)]/40 uppercase">
         Show at the counter · {token.slice(0, 8)}…
       </p>
     </div>

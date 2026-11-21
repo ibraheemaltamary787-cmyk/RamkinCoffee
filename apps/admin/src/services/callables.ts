@@ -144,6 +144,7 @@ export async function callListOpenRewards(status?: 'requested' | 'approved') {
         requestedAt: string | null;
         displayName: string | null;
         phone: string | null;
+        email: string | null;
         purchaseCount: number;
         requiredPurchases: number;
       }>;

@@ -49,7 +49,7 @@ export function CustomerDetailPage() {
   }, [customerId, refresh, role]);
 
   if (loading && !detail) {
-    return <p className="text-sm text-[var(--ramkin-cream)]/45">Loading customer…</p>;
+    return <p className="text-sm text-[var(--ramkin-mist)]/45">Loading customer…</p>;
   }
 
   if (error && !detail) {
@@ -73,14 +73,14 @@ export function CustomerDetailPage() {
         <div className="print:hidden flex flex-wrap items-center justify-between gap-3">
           <Link
             to="/app/customers"
-            className="text-xs tracking-[0.18em] text-[var(--ramkin-cream)]/45 uppercase hover:text-[var(--ramkin-gold)]"
+            className="text-xs tracking-[0.18em] text-[var(--ramkin-mist)]/45 uppercase hover:text-[var(--ramkin-gold)]"
           >
             ← Customers
           </Link>
           <button
             type="button"
             onClick={() => window.print()}
-            className="border border-white/20 px-3 py-1.5 text-[10px] tracking-[0.2em] text-[var(--ramkin-cream)]/70 uppercase hover:border-[var(--ramkin-gold)]/50"
+            className="border border-white/20 px-3 py-1.5 text-[10px] tracking-[0.2em] text-[var(--ramkin-mist)]/70 uppercase hover:border-[var(--ramkin-gold)]/50"
           >
             Print history
           </button>
@@ -98,7 +98,7 @@ export function CustomerDetailPage() {
             >
               {customer.displayName || 'Customer'}
             </h1>
-            <p className="mt-2 text-sm text-[var(--ramkin-cream)]/60 print:text-black/70">
+            <p className="mt-2 text-sm text-[var(--ramkin-mist)]/60 print:text-black/70">
               {customer.phone ?? '—'} · {customer.status} · lifetime {customer.totalPurchases}{' '}
               purchases · {customer.totalRewardsRedeemed} redeemed
             </p>
@@ -108,7 +108,7 @@ export function CustomerDetailPage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="border border-white/10 bg-black/30 p-4">
-          <p className="text-[10px] tracking-[0.2em] text-[var(--ramkin-cream)]/45 uppercase">
+          <p className="text-[10px] tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
             Current combo
           </p>
           <p
@@ -122,10 +122,10 @@ export function CustomerDetailPage() {
           </p>
         </div>
         <div className="border border-white/10 bg-black/30 p-4 sm:col-span-2">
-          <p className="text-[10px] tracking-[0.2em] text-[var(--ramkin-cream)]/45 uppercase">
+          <p className="text-[10px] tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
             QR token
           </p>
-          <p className="mt-2 break-all font-mono text-xs text-[var(--ramkin-cream)]/70">
+          <p className="mt-2 break-all font-mono text-xs text-[var(--ramkin-mist)]/70">
             {customer.qrToken || '—'}
           </p>
           <div className="print:hidden mt-3 flex flex-wrap items-center gap-4">
@@ -140,7 +140,7 @@ export function CustomerDetailPage() {
                 type="button"
                 disabled={rotating}
                 onClick={() => void onRotateQr()}
-                className="border border-white/20 px-3 py-1.5 text-[10px] tracking-[0.2em] text-[var(--ramkin-cream)]/70 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-40"
+                className="border border-white/20 px-3 py-1.5 text-[10px] tracking-[0.2em] text-[var(--ramkin-mist)]/70 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-40"
               >
                 {rotating ? 'Rotating…' : 'Rotate QR'}
               </button>
@@ -155,19 +155,19 @@ export function CustomerDetailPage() {
         </h2>
         <ul className="mt-3 divide-y divide-white/10 border border-white/10">
           {purchases.length === 0 ? (
-            <li className="p-3 text-sm text-[var(--ramkin-cream)]/45">No purchases yet.</li>
+            <li className="p-3 text-sm text-[var(--ramkin-mist)]/45">No purchases yet.</li>
           ) : (
             purchases.map((p) => (
               <li
                 key={p.purchaseId}
                 className="flex flex-wrap justify-between gap-2 px-3 py-2 text-sm"
               >
-                <span className="text-[var(--ramkin-cream)]/80">{p.createdAt ?? '—'}</span>
-                <span className="text-[var(--ramkin-cream)]/45">
+                <span className="text-[var(--ramkin-mist)]/80">{p.createdAt ?? '—'}</span>
+                <span className="text-[var(--ramkin-mist)]/45">
                   by {p.recordedBy.slice(0, 8)}…
                 </span>
                 {p.note ? (
-                  <span className="w-full text-xs text-[var(--ramkin-cream)]/40">{p.note}</span>
+                  <span className="w-full text-xs text-[var(--ramkin-mist)]/40">{p.note}</span>
                 ) : null}
               </li>
             ))
@@ -181,11 +181,11 @@ export function CustomerDetailPage() {
         </h2>
         <ul className="mt-3 divide-y divide-white/10 border border-white/10">
           {rewards.length === 0 ? (
-            <li className="p-3 text-sm text-[var(--ramkin-cream)]/45">No reward requests.</li>
+            <li className="p-3 text-sm text-[var(--ramkin-mist)]/45">No reward requests.</li>
           ) : (
             rewards.map((r) => (
               <li key={r.requestId} className="px-3 py-2 text-sm">
-                <p className="text-[var(--ramkin-cream)]/80">
+                <p className="text-[var(--ramkin-mist)]/80">
                   <span className="text-[var(--ramkin-gold)] uppercase tracking-[0.12em]">
                     {r.status}
                   </span>
@@ -208,10 +208,10 @@ export function CustomerDetailPage() {
         <ul className="mt-3 divide-y divide-white/10 border border-white/10">
           {combos.map((c) => (
             <li key={c.comboId} className="flex flex-wrap justify-between gap-2 px-3 py-2 text-sm">
-              <span className="text-[var(--ramkin-cream)]/80">
+              <span className="text-[var(--ramkin-mist)]/80">
                 {c.purchaseCount}/{c.requiredPurchases} · {c.status}
               </span>
-              <span className="text-xs text-[var(--ramkin-cream)]/40">{c.startedAt ?? '—'}</span>
+              <span className="text-xs text-[var(--ramkin-mist)]/40">{c.startedAt ?? '—'}</span>
             </li>
           ))}
         </ul>

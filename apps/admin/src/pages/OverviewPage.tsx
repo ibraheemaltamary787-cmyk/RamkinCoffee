@@ -7,7 +7,7 @@ import { callGetAdminStats } from '../services/callables';
 function Stat({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
     <div className="border border-white/10 bg-black/35 p-4 transition hover:border-[var(--ramkin-gold)]/35">
-      <dt className="text-[10px] tracking-[0.22em] text-[var(--ramkin-cream)]/45 uppercase">
+      <dt className="text-[10px] tracking-[0.22em] text-[var(--ramkin-mist)]/45 uppercase">
         {label}
       </dt>
       <dd
@@ -16,7 +16,7 @@ function Stat({ label, value, hint }: { label: string; value: string | number; h
       >
         {value}
       </dd>
-      {hint ? <p className="mt-1 text-xs text-[var(--ramkin-cream)]/40">{hint}</p> : null}
+      {hint ? <p className="mt-1 text-xs text-[var(--ramkin-mist)]/40">{hint}</p> : null}
     </div>
   );
 }
@@ -53,7 +53,7 @@ export function OverviewPage() {
           >
             Operations
           </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--ramkin-cream)]/65">
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--ramkin-mist)]/65">
             Live shop overview for {role}. Counts come from Cloud Functions — no Firebase console
             required for day-to-day ops.
           </p>
@@ -72,7 +72,7 @@ export function OverviewPage() {
 
       {error ? <p className="mt-4 text-sm text-red-300/90">{error}</p> : null}
       {loading && !stats ? (
-        <p className="mt-8 text-sm text-[var(--ramkin-cream)]/45">Loading stats…</p>
+        <p className="mt-8 text-sm text-[var(--ramkin-mist)]/45">Loading stats…</p>
       ) : null}
 
       {stats ? (
@@ -97,7 +97,7 @@ export function OverviewPage() {
           to="/app/counter"
           className="border border-white/10 bg-black/30 p-4 transition hover:border-[var(--ramkin-gold)]/40"
         >
-          <p className="text-xs tracking-[0.2em] text-[var(--ramkin-cream)]/45 uppercase">
+          <p className="text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
             Counter
           </p>
           <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">Lookup · stamp · redeem →</p>
@@ -106,7 +106,7 @@ export function OverviewPage() {
           to="/app/rewards"
           className="border border-white/10 bg-black/30 p-4 transition hover:border-[var(--ramkin-gold)]/40"
         >
-          <p className="text-xs tracking-[0.2em] text-[var(--ramkin-cream)]/45 uppercase">
+          <p className="text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
             Rewards
           </p>
           <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">Approve · reject · redeem →</p>
@@ -115,7 +115,7 @@ export function OverviewPage() {
           to="/app/customers"
           className="border border-white/10 bg-black/30 p-4 transition hover:border-[var(--ramkin-gold)]/40"
         >
-          <p className="text-xs tracking-[0.2em] text-[var(--ramkin-cream)]/45 uppercase">
+          <p className="text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
             Customers
           </p>
           <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">Search · history →</p>
@@ -125,7 +125,7 @@ export function OverviewPage() {
             to="/app/reports"
             className="border border-white/10 bg-black/30 p-4 transition hover:border-[var(--ramkin-gold)]/40"
           >
-            <p className="text-xs tracking-[0.2em] text-[var(--ramkin-cream)]/45 uppercase">
+            <p className="text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
               Reports
             </p>
             <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">Excel · PDF · print →</p>

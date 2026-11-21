@@ -39,7 +39,7 @@ export function ActivityLogsPage() {
       >
         Activity logs
       </h1>
-      <p className="mt-2 text-sm text-[var(--ramkin-cream)]/60">
+      <p className="mt-2 text-sm text-[var(--ramkin-mist)]/60">
         Audit trail for OWNER and MANAGER. Append-only — written by Cloud Functions only.
       </p>
 
@@ -75,15 +75,15 @@ export function ActivityLogsPage() {
 
       <ul className="mt-6 divide-y divide-white/10 border border-white/10 bg-black/25">
         {logs.length === 0 ? (
-          <li className="p-4 text-sm text-[var(--ramkin-cream)]/50">No logs found.</li>
+          <li className="p-4 text-sm text-[var(--ramkin-mist)]/50">No logs found.</li>
         ) : (
           logs.map((log) => (
             <li key={log.logId} className="px-4 py-3">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="text-sm text-[var(--ramkin-gold)]">{log.action}</p>
-                <p className="text-xs text-[var(--ramkin-cream)]/40">{log.createdAt ?? '—'}</p>
+                <p className="text-xs text-[var(--ramkin-mist)]/40">{log.createdAt ?? '—'}</p>
               </div>
-              <p className="mt-1 text-xs text-[var(--ramkin-cream)]/55">
+              <p className="mt-1 text-xs text-[var(--ramkin-mist)]/55">
                 {log.actorRole} · {log.actorUid.slice(0, 10)}… · {log.entityType}/
                 {log.entityId.slice(0, 10)}
               </p>

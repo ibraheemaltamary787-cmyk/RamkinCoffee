@@ -15,6 +15,7 @@ type OpenReward = {
   requestedAt: string | null;
   displayName: string | null;
   phone: string | null;
+  email: string | null;
   purchaseCount: number;
   requiredPurchases: number;
 };
@@ -63,9 +64,9 @@ export function RewardsPage() {
           >
             Rewards queue
           </h1>
-          <p className="mt-2 text-sm text-[var(--ramkin-cream)]/60">
-            Approve / reject requests. Redeem only after the free drink is given — that alone resets
-            the combo. STAFF approve/reject is gated by loyalty settings + server RBAC.
+          <p className="mt-2 text-sm text-[var(--ramkin-mist)]/60">
+            Flow: requested → approve/reject → approved → confirm redeem (combo resets only on
+            redeem). STAFF approve/reject is gated by loyalty settings + server RBAC.
           </p>
         </div>
         <button
@@ -92,7 +93,7 @@ export function RewardsPage() {
             className={`px-3 py-1.5 text-xs tracking-[0.15em] uppercase ${
               filter === value
                 ? 'border border-[var(--ramkin-gold)] text-[var(--ramkin-gold)]'
-                : 'border border-white/15 text-[var(--ramkin-cream)]/50'
+                : 'border border-white/15 text-[var(--ramkin-mist)]/50'
             }`}
           >
             {label}
@@ -104,7 +105,7 @@ export function RewardsPage() {
 
       <ul className="mt-8 space-y-4">
         {rewards.length === 0 ? (
-          <li className="border border-white/10 bg-black/20 p-4 text-sm text-[var(--ramkin-cream)]/50">
+          <li className="border border-white/10 bg-black/20 p-4 text-sm text-[var(--ramkin-mist)]/50">
             No open reward requests.
           </li>
         ) : (
@@ -114,14 +115,15 @@ export function RewardsPage() {
                 <div>
                   <Link
                     to={`/app/customers/${reward.customerId}`}
-                    className="text-[var(--ramkin-cream)] hover:text-[var(--ramkin-gold)]"
+                    className="text-[var(--ramkin-mist)] hover:text-[var(--ramkin-gold)]"
                   >
-                    {reward.displayName ?? 'Customer'} · {reward.phone ?? '—'}
+                    {reward.displayName ?? 'Customer'} · {reward.email ?? reward.phone ?? '—'}
                   </Link>
                   <p className="mt-1 text-xs tracking-[0.15em] text-[var(--ramkin-gold-soft)]/70 uppercase">
                     {reward.status} · {reward.purchaseCount}/{reward.requiredPurchases} stamps
+                    {reward.phone ? ` · ${reward.phone}` : ''}
                   </p>
-                  <p className="mt-1 text-xs text-[var(--ramkin-cream)]/40">
+                  <p className="mt-1 text-xs text-[var(--ramkin-mist)]/40">
                     {reward.requestedAt ?? '—'}
                   </p>
                 </div>

@@ -103,7 +103,7 @@ export function ReportsPage() {
         >
           Reports
         </h1>
-        <p className="mt-3 text-sm text-[var(--ramkin-cream)]/60">
+        <p className="mt-3 text-sm text-[var(--ramkin-mist)]/60">
           Excel and PDF exports are limited to OWNER and MANAGER.
         </p>
       </section>
@@ -119,7 +119,7 @@ export function ReportsPage() {
         >
           Reports
         </h1>
-        <p className="mt-2 max-w-2xl text-sm text-[var(--ramkin-cream)]/60">
+        <p className="mt-2 max-w-2xl text-sm text-[var(--ramkin-mist)]/60">
           Filter loyalty data, download Excel (customers / purchases / reward requests), or a branded
           PDF summary. Print uses the on-screen preview.
         </p>
@@ -174,7 +174,7 @@ export function ReportsPage() {
             {SHEET_OPTIONS.map((opt) => (
               <label
                 key={opt.id}
-                className="flex items-center gap-2 text-xs tracking-[0.12em] text-[var(--ramkin-cream)]/70 uppercase"
+                className="flex items-center gap-2 text-xs tracking-[0.12em] text-[var(--ramkin-mist)]/70 uppercase"
               >
                 <input
                   type="checkbox"
@@ -199,7 +199,7 @@ export function ReportsPage() {
               type="button"
               disabled={busy}
               onClick={() => void runExport('xlsx')}
-              className="border border-white/20 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-cream)]/80 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-50"
+              className="border border-white/20 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/80 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-50"
             >
               Download Excel
             </button>
@@ -207,7 +207,7 @@ export function ReportsPage() {
               type="button"
               disabled={busy}
               onClick={() => void runExport('pdf')}
-              className="border border-white/20 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-cream)]/80 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-50"
+              className="border border-white/20 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/80 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-50"
             >
               Download PDF
             </button>
@@ -215,7 +215,7 @@ export function ReportsPage() {
               type="button"
               disabled={!preview}
               onClick={() => window.print()}
-              className="border border-white/20 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-cream)]/80 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-50"
+              className="border border-white/20 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/80 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-50"
             >
               Print preview
             </button>
@@ -224,7 +224,7 @@ export function ReportsPage() {
 
         {error ? <p className="mt-4 text-sm text-red-300/90">{error}</p> : null}
         {lastSummary && !preview ? (
-          <p className="mt-4 text-xs text-[var(--ramkin-cream)]/45">
+          <p className="mt-4 text-xs text-[var(--ramkin-mist)]/45">
             Last export · customers {lastSummary.customerCount} · purchases{' '}
             {lastSummary.purchaseCount} · rewards {lastSummary.rewardCount}
           </p>
@@ -246,7 +246,7 @@ export function ReportsPage() {
               >
                 RAMKIN
               </p>
-              <p className="text-xs tracking-[0.18em] text-[var(--ramkin-cream)]/50 uppercase print:text-black/60">
+              <p className="text-xs tracking-[0.18em] text-[var(--ramkin-mist)]/50 uppercase print:text-black/60">
                 Loyalty report · {preview.summary.generatedAt}
               </p>
             </div>
@@ -254,7 +254,7 @@ export function ReportsPage() {
 
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="border border-white/10 p-3 print:border-black/20">
-              <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--ramkin-cream)]/45 print:text-black/50">
+              <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--ramkin-mist)]/45 print:text-black/50">
                 Customers
               </p>
               <p className="mt-1 text-xl text-[var(--ramkin-gold)] print:text-black">
@@ -262,7 +262,7 @@ export function ReportsPage() {
               </p>
             </div>
             <div className="border border-white/10 p-3 print:border-black/20">
-              <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--ramkin-cream)]/45 print:text-black/50">
+              <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--ramkin-mist)]/45 print:text-black/50">
                 Purchases
               </p>
               <p className="mt-1 text-xl text-[var(--ramkin-gold)] print:text-black">
@@ -270,7 +270,7 @@ export function ReportsPage() {
               </p>
             </div>
             <div className="border border-white/10 p-3 print:border-black/20">
-              <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--ramkin-cream)]/45 print:text-black/50">
+              <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--ramkin-mist)]/45 print:text-black/50">
                 Rewards
               </p>
               <p className="mt-1 text-xl text-[var(--ramkin-gold)] print:text-black">
@@ -279,7 +279,7 @@ export function ReportsPage() {
             </div>
           </div>
 
-          <p className="text-xs text-[var(--ramkin-cream)]/45 print:text-black/60">
+          <p className="text-xs text-[var(--ramkin-mist)]/45 print:text-black/60">
             Range {preview.summary.from ?? 'any'} → {preview.summary.to ?? 'any'}
             {preview.summary.search ? ` · search “${preview.summary.search}”` : ''}
             {preview.summary.rewardStatus ? ` · status ${preview.summary.rewardStatus}` : ''}
@@ -293,13 +293,13 @@ export function ReportsPage() {
               <table className="mt-3 w-full border-collapse text-left text-xs">
                 <thead>
                   <tr className="border-b border-white/15 print:border-black/20">
-                    <th className="py-2 pr-2 font-normal text-[var(--ramkin-cream)]/50 print:text-black/60">
+                    <th className="py-2 pr-2 font-normal text-[var(--ramkin-mist)]/50 print:text-black/60">
                       Name
                     </th>
-                    <th className="py-2 pr-2 font-normal text-[var(--ramkin-cream)]/50 print:text-black/60">
+                    <th className="py-2 pr-2 font-normal text-[var(--ramkin-mist)]/50 print:text-black/60">
                       Phone
                     </th>
-                    <th className="py-2 font-normal text-[var(--ramkin-cream)]/50 print:text-black/60">
+                    <th className="py-2 font-normal text-[var(--ramkin-mist)]/50 print:text-black/60">
                       Stamps
                     </th>
                   </tr>
@@ -307,13 +307,13 @@ export function ReportsPage() {
                 <tbody>
                   {preview.customers.slice(0, 40).map((c) => (
                     <tr key={c.customerId} className="border-b border-white/10 print:border-black/10">
-                      <td className="py-2 pr-2 text-[var(--ramkin-cream)]/85 print:text-black">
+                      <td className="py-2 pr-2 text-[var(--ramkin-mist)]/85 print:text-black">
                         {c.displayName || c.customerId.slice(0, 8)}
                       </td>
-                      <td className="py-2 pr-2 text-[var(--ramkin-cream)]/55 print:text-black/70">
+                      <td className="py-2 pr-2 text-[var(--ramkin-mist)]/55 print:text-black/70">
                         {c.phone ?? '—'}
                       </td>
-                      <td className="py-2 text-[var(--ramkin-cream)]/55 print:text-black/70">
+                      <td className="py-2 text-[var(--ramkin-mist)]/55 print:text-black/70">
                         {c.purchaseCount}/{c.requiredPurchases}
                       </td>
                     </tr>
@@ -334,10 +334,10 @@ export function ReportsPage() {
                     key={p.purchaseId}
                     className="flex flex-wrap justify-between gap-2 px-3 py-2 text-xs"
                   >
-                    <span className="text-[var(--ramkin-cream)]/80 print:text-black">
+                    <span className="text-[var(--ramkin-mist)]/80 print:text-black">
                       {p.customerName ?? p.customerId.slice(0, 8)}
                     </span>
-                    <span className="text-[var(--ramkin-cream)]/45 print:text-black/60">
+                    <span className="text-[var(--ramkin-mist)]/45 print:text-black/60">
                       {p.createdAt ?? '—'}
                     </span>
                   </li>
@@ -357,7 +357,7 @@ export function ReportsPage() {
                     <span className="tracking-[0.12em] text-[var(--ramkin-gold)] uppercase print:text-black">
                       {r.status}
                     </span>
-                    <span className="text-[var(--ramkin-cream)]/70 print:text-black/80">
+                    <span className="text-[var(--ramkin-mist)]/70 print:text-black/80">
                       {' '}
                       · {r.customerName ?? r.customerId.slice(0, 8)} · {r.requestedAt ?? '—'}
                     </span>

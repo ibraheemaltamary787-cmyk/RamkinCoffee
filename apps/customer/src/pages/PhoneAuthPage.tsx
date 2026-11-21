@@ -4,7 +4,11 @@ import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } fro
 import { BRAND } from '@ramkin/shared';
 import { BrandMark } from '../components/BrandMark';
 import { useAuth } from '../auth/AuthContext';
-import { getFirebaseAuth, isFirebaseConfigured } from '../services/firebase';
+import {
+  getFirebaseAuth,
+  isFirebaseConfigured,
+  isUsingFirebaseEmulators,
+} from '../services/firebase';
 
 interface PhoneAuthPageProps {
   mode: 'login' | 'register';
@@ -29,6 +33,7 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
   const [error, setError] = useState<string | null>(null);
   const confirmationRef = useRef<ConfirmationResult | null>(null);
   const verifierRef = useRef<RecaptchaVerifier | null>(null);
+  const usingEmulators = isUsingFirebaseEmulators();
 
   useEffect(() => {
     if (user && step === 'phone') {
@@ -83,14 +88,18 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
       const verifier = await ensureVerifier();
       confirmationRef.current = await signInWithPhoneNumber(getFirebaseAuth(), e164, verifier);
       setStep('code');
-      setMessage('OTP sent. Enter the code from SMS (or Emulator test number).');
+      setMessage(
+        usingEmulators
+          ? 'OTP sent. Copy the code from the emulators terminal (Auth emulator — no SMS).'
+          : 'OTP sent. Enter the SMS code (or a Console test number).',
+      );
     } catch (err) {
       verifierRef.current?.clear();
       verifierRef.current = null;
       setError(
         err instanceof Error
           ? err.message
-          : 'Failed to send OTP. Confirm Phone Auth / test numbers / Emulator.',
+          : 'Failed to send OTP. Prefer Email/Password on Spark, or use Auth Emulator / Console test numbers.',
       );
     } finally {
       setBusy(false);
@@ -127,7 +136,11 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
           {BRAND.name}
         </h1>
         <p className="mt-2 text-xs tracking-[0.3em] text-[var(--ramkin-gold-soft)]/70 uppercase">
-          {mode === 'register' ? 'Create account' : 'Welcome back'}
+          Phone OTP · optional
+        </p>
+        <p className="mt-3 max-w-sm text-xs leading-relaxed text-[var(--ramkin-mist)]/50">
+          Spark keep-free uses Email/Password by default. Phone OTP is for Auth Emulator or Console
+          test numbers only — no production SMS.
         </p>
       </div>
 
@@ -138,24 +151,24 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
           style={{ animationDelay: '80ms' }}
         >
           {mode === 'register' && (
-            <label className="block text-left text-sm text-[var(--ramkin-cream)]/80">
+            <label className="block text-left text-sm text-[var(--ramkin-mist)]/80">
               Name
               <input
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 text-[var(--ramkin-cream)] outline-none focus:border-[var(--ramkin-gold)]"
+                className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 text-[var(--ramkin-mist)] outline-none focus:border-[var(--ramkin-gold)]"
                 autoComplete="name"
                 required
               />
             </label>
           )}
-          <label className="block text-left text-sm text-[var(--ramkin-cream)]/80">
+          <label className="block text-left text-sm text-[var(--ramkin-mist)]/80">
             Phone (E.164)
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+9627XXXXXXXX"
-              className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 text-[var(--ramkin-cream)] outline-none focus:border-[var(--ramkin-gold)]"
+              className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 text-[var(--ramkin-mist)] outline-none focus:border-[var(--ramkin-gold)]"
               autoComplete="tel"
               inputMode="tel"
               required
@@ -171,12 +184,12 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
         </form>
       ) : (
         <form onSubmit={verifyCode} className="animate-fade-up space-y-4">
-          <label className="block text-left text-sm text-[var(--ramkin-cream)]/80">
+          <label className="block text-left text-sm text-[var(--ramkin-mist)]/80">
             Verification code
             <input
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 tracking-[0.3em] text-[var(--ramkin-cream)] outline-none focus:border-[var(--ramkin-gold)]"
+              className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 tracking-[0.3em] text-[var(--ramkin-mist)] outline-none focus:border-[var(--ramkin-gold)]"
               inputMode="numeric"
               autoComplete="one-time-code"
               required
@@ -208,22 +221,14 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
       {message && <p className="mt-4 text-sm text-[var(--ramkin-gold-soft)]">{message}</p>}
       {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
 
-      <p className="mt-8 text-center text-sm text-[var(--ramkin-cream)]/50">
-        {mode === 'register' ? (
-          <>
-            Already a member?{' '}
-            <Link to="/login" className="text-[var(--ramkin-gold)] hover:underline">
-              Log in
-            </Link>
-          </>
-        ) : (
-          <>
-            New here?{' '}
-            <Link to="/register" className="text-[var(--ramkin-gold)] hover:underline">
-              Register
-            </Link>
-          </>
-        )}
+      <p className="mt-8 text-center text-sm text-[var(--ramkin-mist)]/50">
+        Prefer Email/Password?{' '}
+        <Link
+          to={mode === 'register' ? '/register' : '/login'}
+          className="text-[var(--ramkin-gold)] hover:underline"
+        >
+          {mode === 'register' ? 'Register with email' : 'Sign in with email'}
+        </Link>
         {' · '}
         <Link to="/" className="text-[var(--ramkin-gold)]/70 hover:underline">
           Home

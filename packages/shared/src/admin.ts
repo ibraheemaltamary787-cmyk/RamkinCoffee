@@ -29,6 +29,7 @@ export interface CustomerListItemDto {
   customerId: string;
   displayName: string;
   phone: string | null;
+  email: string | null;
   status: UserStatus;
   currentComboId: string | null;
   comboStatus: ComboStatus | null;
@@ -218,17 +219,21 @@ export function normalizeSearchQuery(query: string): string {
 }
 
 export function customerMatchesQuery(
-  customer: { displayName?: string | null; phone?: string | null },
+  customer: { displayName?: string | null; phone?: string | null; email?: string | null },
   query: string,
 ): boolean {
   const q = normalizeSearchQuery(query);
   if (!q) return true;
   const name = (customer.displayName ?? '').toLowerCase();
   const phone = (customer.phone ?? '').toLowerCase();
+  const email = (customer.email ?? '').toLowerCase();
   const phoneDigits = phone.replace(/\D/g, '');
   const qDigits = q.replace(/\D/g, '');
   return (
-    name.includes(q) || phone.includes(q) || (qDigits.length > 0 && phoneDigits.includes(qDigits))
+    name.includes(q) ||
+    email.includes(q) ||
+    phone.includes(q) ||
+    (qDigits.length > 0 && phoneDigits.includes(qDigits))
   );
 }
 

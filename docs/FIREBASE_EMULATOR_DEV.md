@@ -13,7 +13,8 @@ Local Auth + Firestore + Functions emulators so loyalty callables stay server-si
 | Need                                                                                                   | Production (Blaze)                            | Free path                                           |
 | ------------------------------------------------------------------------------------------------------ | --------------------------------------------- | --------------------------------------------------- |
 | Privileged callables (purchase, reward approve/reject/redeem, combo reset, idempotency, activity logs) | Cloud Functions deploy                        | **Functions Emulator**                              |
-| Customer phone OTP                                                                                     | Billed SMS (JO ≈ $0.24/SMS — see cost report) | **Auth Emulator** (and/or Console **test numbers**) |
+| Customer Email/Password (Spark default)                                                                | Live Auth                                     | **Auth Emulator**                                   |
+| Customer phone OTP (optional)                                                                          | Billed SMS (JO ≈ $0.24/SMS — see cost report) | **Auth Emulator** (and/or Console **test numbers**) |
 | Staff Email/Password                                                                                   | Live Auth                                     | **Auth Emulator**                                   |
 | Firestore under rules                                                                                  | Live Firestore                                | **Firestore Emulator**                              |
 
@@ -132,19 +133,19 @@ Then force a token refresh (sign out / sign in) in the admin app.
 
 ---
 
-## 6. Customer phone OTP without SMS (Auth emulator)
+## 6. Customer Email/Password (Spark keep-free default)
 
 1. Emulators must include **auth** (`npm run emulators`).
-2. Customer app with `VITE_USE_FIREBASE_EMULATORS=true`.
-3. Register / login with a fictional E.164 number (e.g. `+15550109999`).
-4. The Auth emulator **does not send SMS** — it prints the verification code in the **emulators terminal** (also visible via Auth emulator REST — see [Auth emulator phone/SMS](https://firebase.google.com/docs/emulator-suite/connect_auth#emulated_phonesms_authentication)).
-5. Enter that code in the app.
+2. Customer app with `VITE_USE_FIREBASE_EMULATORS=true` → amber/gold emulator banner.
+3. Open http://localhost:5173/register → name + email + password (creates Auth user + calls `ensureCustomerProfile` on Functions emulator).
+4. Or add the user in Emulator UI → Authentication → Email/Password, then sign in at `/login`.
+5. Dashboard gold stamp bar + Counter QR — staff look up by **QR** (email customers may have no phone).
 
-Notes:
+### Optional: phone OTP without SMS (Auth emulator)
 
-- Emulator phone flow skips reCAPTCHA similarly to integration-test mode.
-- Console **preconfigured test numbers are not used** by the Auth emulator.
-- Emulator ID tokens work only with emulators / Admin SDK when `FIREBASE_AUTH_EMULATOR_HOST` is set.
+1. Customer `/register/phone` or `/login/phone` with a fictional E.164 (e.g. `+15550109999`).
+2. Auth emulator **does not send SMS** — verification code prints in the **emulators terminal**.
+3. Console **preconfigured test numbers are not used** by the Auth emulator.
 
 ### Optional: Console fictional test numbers (live Auth, still no SMS)
 
@@ -164,7 +165,7 @@ With the stack up, exercise loyalty through the **apps** (callables → port `50
 
 | Step                    | Where              | Callable / action                                        |
 | ----------------------- | ------------------ | -------------------------------------------------------- |
-| Ensure customer profile | Customer after OTP | `ensureCustomerProfile`                                  |
+| Ensure customer profile | Customer after email (or phone) register | `ensureCustomerProfile`                      |
 | Stamp                   | Admin Counter      | `recordPurchase` (replay same idempotency key → deduped) |
 | Request reward          | Customer           | `requestReward`                                          |
 | Approve / reject        | Admin Rewards      | `approveReward` / `rejectReward`                         |
@@ -221,7 +222,9 @@ Emulators must be running before a non-dry-run seed. See [`scripts/seed-loyalty-
 - [ ] `npm run emulators`
 - [ ] `npm run dev:customer` + `npm run dev:admin` (amber emulator banner)
 - [ ] Staff Email/Password via Emulator UI → bootstrap OWNER via Functions emulator
-- [ ] Customer phone OTP code from emulators terminal
+- [ ] Customer Email/Password register → dashboard gold progress + QR
+- [ ] Optional: phone OTP code from emulators terminal
 - [ ] Privileged actions only via Functions emulator callables
+- [ ] Admin Counter: QR lookup → stamp → Rewards approve → redeem
 - [ ] Optional: `npm run seed:emulator -- --n 3 --stop-at approved`
 - [ ] No Blaze / billing / real SMS / Hosting publish
