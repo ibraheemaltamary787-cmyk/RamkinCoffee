@@ -26,7 +26,7 @@ export function EmailAuthPage({ mode }: EmailAuthPageProps) {
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard', { replace: true });
+      navigate('/home', { replace: true });
     }
   }, [user, navigate]);
 
@@ -62,7 +62,7 @@ export function EmailAuthPage({ mode }: EmailAuthPageProps) {
         await signInWithEmailAndPassword(auth, email.trim(), password);
         await ensureProfile();
       }
-      navigate('/dashboard', { replace: true });
+      navigate('/home', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign-in failed.');
     } finally {

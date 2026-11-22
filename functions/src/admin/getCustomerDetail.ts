@@ -5,6 +5,7 @@ import {
   stampsRemaining,
   type ComboStatus,
   type CustomerDetailDto,
+  type PurchaseListItemDto,
   type RewardRequestStatus,
   type UserStatus,
 } from '@ramkin/shared';
@@ -98,6 +99,11 @@ export const getCustomerDetail = onCall({ cors: true }, async (request) => {
         amount: typeof p.amount === 'number' ? p.amount : null,
         note: (p.note as string | null | undefined) ?? null,
         createdAt: toIso(p.createdAt as Timestamp | undefined),
+        channel: (p.channel as PurchaseListItemDto['channel'] | undefined) ?? null,
+        orderRef: (p.orderRef as string | null | undefined) ?? null,
+        verificationStatus:
+          (p.verificationStatus as PurchaseListItemDto['verificationStatus'] | undefined) ?? null,
+        source: (p.source as PurchaseListItemDto['source'] | undefined) ?? null,
       };
     }),
     rewards: rewardsSnap.docs.map((doc) => {

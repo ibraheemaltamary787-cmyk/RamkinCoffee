@@ -39,6 +39,11 @@ export const listMyPurchases = onCall({ cors: true }, async (request) => {
       amount: typeof data.amount === 'number' ? data.amount : null,
       note: (data.note as string | null | undefined) ?? null,
       createdAt: toIso(data.createdAt as Timestamp | undefined),
+      channel: (data.channel as MyPurchaseDto['channel'] | undefined) ?? null,
+      orderRef: (data.orderRef as string | null | undefined) ?? null,
+      verificationStatus:
+        (data.verificationStatus as MyPurchaseDto['verificationStatus'] | undefined) ?? null,
+      source: (data.source as MyPurchaseDto['source'] | undefined) ?? null,
     };
   });
 

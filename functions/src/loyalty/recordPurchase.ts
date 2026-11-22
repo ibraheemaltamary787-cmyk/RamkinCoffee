@@ -4,6 +4,7 @@ import {
   ACTIVITY_ACTIONS,
   applyPurchaseToCombo,
   LoyaltyTransitionError,
+  normalizeOrderRef,
   recordPurchaseSchema,
   stampsRemaining,
   type ComboSnapshot,
@@ -16,6 +17,7 @@ import { createActiveComboInTx } from './combo';
 export const recordPurchase = onCall({ cors: true }, async (request) => {
   const staff = requireStaff(request);
   const input = recordPurchaseSchema.parse(request.data ?? {});
+  const orderRefNormalized = normalizeOrderRef(input.orderRef ?? null);
 
   const db = getFirestore();
   const settings = await ensureLoyaltySettingsDoc(db);
@@ -24,6 +26,9 @@ export const recordPurchase = onCall({ cors: true }, async (request) => {
   const userRef = db.collection('users').doc(input.customerId);
   // Idempotency: purchase doc id = idempotencyKey (unique constraint).
   const purchaseRef = db.collection('purchases').doc(input.idempotencyKey);
+  const orderRefLock = orderRefNormalized
+    ? db.collection('purchaseOrderRefs').doc(orderRefNormalized)
+    : null;
 
   const result = await db.runTransaction(async (tx) => {
     const existingPurchase = await tx.get(purchaseRef);
@@ -46,7 +51,23 @@ export const recordPurchase = onCall({ cors: true }, async (request) => {
           typeof combo.requiredPurchases === 'number' ? combo.requiredPurchases : 9,
         comboStatus: (combo.status as string) ?? 'active',
         completed: combo.status === 'completed',
+        channel: (prior.channel as string | undefined) ?? input.channel,
+        orderRef: (prior.orderRef as string | null | undefined) ?? input.orderRef ?? null,
+        verificationStatus:
+          (prior.verificationStatus as string | undefined) ?? input.verificationStatus,
       };
+    }
+
+    if (orderRefLock) {
+      const existingRef = await tx.get(orderRefLock);
+      if (existingRef.exists) {
+        const prior = existingRef.data()!;
+        throw new HttpsError(
+          'already-exists',
+          `Order/ref "${input.orderRef}" already recorded` +
+            (prior.purchaseId ? ` (purchase ${prior.purchaseId}).` : '.'),
+        );
+      }
     }
 
     const [customerSnap, userSnap] = await Promise.all([tx.get(customerRef), tx.get(userRef)]);
@@ -128,16 +149,38 @@ export const recordPurchase = onCall({ cors: true }, async (request) => {
     }
     tx.update(comboRef, comboUpdate);
 
+    const channel = input.channel;
+    const verificationStatus = input.verificationStatus;
+    const source = input.source;
+    const orderRef = input.orderRef?.trim() || null;
+
     tx.set(purchaseRef, {
       customerId: input.customerId,
       comboId,
       recordedBy: staff.uid,
+      staffId: staff.uid,
       amount: input.amount ?? null,
       note: input.note ?? null,
       idempotencyKey: input.idempotencyKey,
       clientRequestId: input.clientRequestId ?? null,
+      channel,
+      orderRef,
+      orderRefNormalized: orderRefNormalized,
+      verificationStatus,
+      source,
       createdAt: FieldValue.serverTimestamp(),
     });
+
+    if (orderRefLock && orderRefNormalized) {
+      tx.set(orderRefLock, {
+        purchaseId: purchaseRef.id,
+        customerId: input.customerId,
+        channel,
+        orderRef,
+        recordedBy: staff.uid,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    }
 
     tx.set(
       customerRef,
@@ -156,6 +199,9 @@ export const recordPurchase = onCall({ cors: true }, async (request) => {
       requiredPurchases: snapshot.requiredPurchases,
       comboStatus: transition.status,
       completed: transition.completed,
+      channel,
+      orderRef,
+      verificationStatus,
     };
   });
 
@@ -171,6 +217,9 @@ export const recordPurchase = onCall({ cors: true }, async (request) => {
         comboId: result.comboId,
         purchaseCount: result.purchaseCount,
         completed: result.completed,
+        channel: result.channel,
+        orderRef: result.orderRef,
+        verificationStatus: result.verificationStatus,
       },
     });
   }

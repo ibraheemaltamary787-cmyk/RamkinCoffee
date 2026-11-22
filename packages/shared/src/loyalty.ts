@@ -4,10 +4,16 @@ import { z } from 'zod';
 import {
   COMBO_STATUSES,
   DEFAULT_PURCHASES_REQUIRED,
+  PURCHASE_CHANNELS,
+  PURCHASE_SOURCES,
   REWARD_REQUEST_STATUSES,
+  VERIFICATION_STATUSES,
   type ComboStatus,
+  type PurchaseChannel,
+  type PurchaseSource,
   type RewardRequestStatus,
   type Role,
+  type VerificationStatus,
 } from './constants';
 
 export const OPEN_REWARD_STATUSES = ['requested', 'approved'] as const;
@@ -86,6 +92,19 @@ export const recordPurchaseSchema = z.object({
   amount: z.number().nonnegative().finite().nullable().optional(),
   note: z.string().trim().max(280).nullable().optional(),
   clientRequestId: z.string().trim().max(128).nullable().optional(),
+  /** online = Foodics menu; in_store = counter. Default in_store for busy counter. */
+  channel: z.enum(PURCHASE_CHANNELS).optional().default('in_store'),
+  /** Foodics / POS order or reference id when available (unique when set). */
+  orderRef: z
+    .string()
+    .trim()
+    .min(1)
+    .max(128)
+    .regex(/^[A-Za-z0-9._:#/-]+$/, 'orderRef has invalid characters')
+    .nullable()
+    .optional(),
+  verificationStatus: z.enum(VERIFICATION_STATUSES).optional().default('verified'),
+  source: z.enum(PURCHASE_SOURCES).optional().default('counter'),
 });
 
 /** Customer self-service history (own purchases / rewards only). */
@@ -99,6 +118,17 @@ export interface MyPurchaseDto {
   amount: number | null;
   note: string | null;
   createdAt: string | null;
+  channel: PurchaseChannel | null;
+  orderRef: string | null;
+  verificationStatus: VerificationStatus | null;
+  source: PurchaseSource | null;
+}
+
+/** Normalize order/ref for uniqueness locks (case-insensitive, trimmed). */
+export function normalizeOrderRef(orderRef: string | null | undefined): string | null {
+  if (!orderRef) return null;
+  const normalized = orderRef.trim().toLowerCase();
+  return normalized.length > 0 ? normalized : null;
 }
 
 export interface MyRewardRequestDto {
@@ -146,7 +176,8 @@ export const updateLoyaltySettingsSchema = z.object({
   staffCanApproveRewards: z.boolean().optional(),
 });
 
-export type RecordPurchaseInput = z.infer<typeof recordPurchaseSchema>;
+/** Client/callable argument shape — defaults applied by Zod `.parse` on the server. */
+export type RecordPurchaseInput = z.input<typeof recordPurchaseSchema>;
 export type ListMyHistoryInput = z.input<typeof listMyHistorySchema>;
 export type LookupCustomerByPhoneInput = z.infer<typeof lookupCustomerByPhoneSchema>;
 export type LookupCustomerByQrInput = z.infer<typeof lookupCustomerByQrSchema>;

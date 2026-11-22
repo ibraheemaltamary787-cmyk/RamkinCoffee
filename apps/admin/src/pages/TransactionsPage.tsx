@@ -101,6 +101,8 @@ export function TransactionsPage() {
             <tr>
               <th>Customer</th>
               <th>Phone</th>
+              <th>Channel</th>
+              <th>Order / ref</th>
               <th>When</th>
               <th>Staff</th>
               <th>Note</th>
@@ -109,7 +111,7 @@ export function TransactionsPage() {
           <tbody>
             {purchases.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-[var(--ramkin-mist)]/50">
+                <td colSpan={7} className="text-[var(--ramkin-mist)]/50">
                   No purchases match.
                 </td>
               </tr>
@@ -125,6 +127,8 @@ export function TransactionsPage() {
                     </Link>
                   </td>
                   <td className="text-[var(--ramkin-mist)]/55">{p.customerPhone ?? '—'}</td>
+                  <td className="text-[var(--ramkin-mist)]/55">{p.channel ?? '—'}</td>
+                  <td className="text-[var(--ramkin-mist)]/45">{p.orderRef ?? '—'}</td>
                   <td className="whitespace-nowrap text-[var(--ramkin-mist)]/50">
                     {p.createdAt ?? '—'}
                   </td>

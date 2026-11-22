@@ -58,6 +58,11 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Uniqueness locks for online/POS order refs — Admin SDK only.
+    match /purchaseOrderRefs/{refId} {
+      allow read, write: if false;
+    }
+
     match /rewardRequests/{requestId} {
       allow read: if signedIn() && (
         resource.data.customerId == uid() || isStaff()

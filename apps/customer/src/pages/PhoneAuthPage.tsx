@@ -8,7 +8,9 @@ import {
 } from 'firebase/auth';
 import { BRAND, DEV_FAKE_OTP_CODE, isE164Phone, toE164Phone } from '@ramkin/shared';
 import { BrandMark } from '../components/BrandMark';
+import { LanguageSwitch } from '../components/LanguageSwitch';
 import { useAuth } from '../auth/AuthContext';
+import { useLocale } from '../i18n/LocaleContext';
 import { callDevFakeOtpSignIn } from '../services/callables';
 import { isDevFakeOtpEnabled } from '../services/devFakeOtp';
 import {
@@ -24,6 +26,7 @@ interface PhoneAuthPageProps {
 export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
   const navigate = useNavigate();
   const { ensureProfile, user, configured } = useAuth();
+  const { t } = useLocale();
   const [phone, setPhone] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [code, setCode] = useState('');
@@ -38,7 +41,7 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
 
   useEffect(() => {
     if (user && step === 'phone') {
-      navigate('/dashboard', { replace: true });
+      navigate('/home', { replace: true });
     }
   }, [user, step, navigate]);
 
@@ -66,9 +69,7 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
     setMessage(null);
 
     if (!configured || !isFirebaseConfigured()) {
-      setError(
-        'Firebase is not configured yet. Add VITE_FIREBASE_* to apps/customer/.env and enable emulators for Fake OTP.',
-      );
+      setError(t('configureFirebase'));
       return;
     }
 
@@ -86,7 +87,7 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
     if (fakeOtp) {
       setPhone(e164);
       setStep('code');
-      setMessage(`DEV OTP mode: enter ${DEV_FAKE_OTP_CODE} (no SMS).`);
+      setMessage(t('fakeOtpTip', { code: DEV_FAKE_OTP_CODE }));
       return;
     }
 
@@ -138,7 +139,7 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
       );
       await signInWithCustomToken(getFirebaseAuth(), result.customToken);
       await ensureProfile(mode === 'register' ? displayName.trim() : undefined);
-      navigate('/dashboard', { replace: true });
+      navigate('/home', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid code or profile setup failed.');
     } finally {
@@ -162,7 +163,7 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
     try {
       await confirmationRef.current.confirm(code.trim());
       await ensureProfile(mode === 'register' ? displayName.trim() : undefined);
-      navigate('/dashboard', { replace: true });
+      navigate('/home', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid code or profile setup failed.');
     } finally {
@@ -172,6 +173,10 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 py-12">
+      <div className="absolute end-6 top-6">
+        <LanguageSwitch />
+      </div>
+
       <div className="animate-fade-up mb-8 flex flex-col items-center text-center">
         <BrandMark size="md" />
         <h1
@@ -181,19 +186,13 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
           {BRAND.name}
         </h1>
         <p className="mt-2 text-xs tracking-[0.3em] text-[var(--ramkin-gold-soft)]/70 uppercase">
-          {fakeOtp ? 'Phone · DEV Fake OTP' : 'Phone OTP · optional'}
+          {mode === 'register' ? t('join') : t('login')}
         </p>
         {fakeOtp ? (
           <p className="mt-3 max-w-sm border border-amber-500/35 bg-amber-950/50 px-3 py-2 text-xs leading-relaxed text-amber-100/90">
-            Development Fake OTP is on. Use code <strong>{DEV_FAKE_OTP_CODE}</strong> after entering
-            your mobile. Production builds reject this path.
+            {t('fakeOtpTip', { code: DEV_FAKE_OTP_CODE })}
           </p>
-        ) : (
-          <p className="mt-3 max-w-sm text-xs leading-relaxed text-[var(--ramkin-mist)]/50">
-            Spark keep-free uses Email/Password by default. Phone OTP is for Auth Emulator or Console
-            test numbers only — no production SMS.
-          </p>
-        )}
+        ) : null}
       </div>
 
       {step === 'phone' ? (
@@ -203,8 +202,8 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
           style={{ animationDelay: '80ms' }}
         >
           {mode === 'register' && (
-            <label className="block text-left text-sm text-[var(--ramkin-mist)]/80">
-              Name
+            <label className="block text-start text-sm text-[var(--ramkin-mist)]/80">
+              {t('name')}
               <input
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
@@ -214,8 +213,8 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
               />
             </label>
           )}
-          <label className="block text-left text-sm text-[var(--ramkin-mist)]/80">
-            Phone (E.164)
+          <label className="block text-start text-sm text-[var(--ramkin-mist)]/80">
+            {t('phone')}
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -231,13 +230,13 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
             disabled={busy}
             className="w-full border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] py-3 text-sm font-medium tracking-[0.2em] text-black uppercase disabled:opacity-60"
           >
-            {busy ? 'Sending…' : fakeOtp ? 'Continue' : 'Send OTP'}
+            {busy ? t('loading') : fakeOtp ? t('continue') : t('sendOtp')}
           </button>
         </form>
       ) : (
         <form onSubmit={(e) => void verifyCode(e)} className="animate-fade-up space-y-4">
-          <label className="block text-left text-sm text-[var(--ramkin-mist)]/80">
-            Verification code
+          <label className="block text-start text-sm text-[var(--ramkin-mist)]/80">
+            {t('verificationCode')}
             <input
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -253,7 +252,11 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
             disabled={busy}
             className="w-full border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] py-3 text-sm font-medium tracking-[0.2em] text-black uppercase disabled:opacity-60"
           >
-            {busy ? 'Verifying…' : mode === 'register' ? 'Verify & register' : 'Verify & log in'}
+            {busy
+              ? t('loading')
+              : mode === 'register'
+                ? t('verifyRegister')
+                : t('verifyLogin')}
           </button>
           <button
             type="button"
@@ -264,7 +267,7 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
               confirmationRef.current = null;
             }}
           >
-            Use a different number
+            {t('differentNumber')}
           </button>
         </form>
       )}
@@ -277,16 +280,16 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
       <p className="mt-8 text-center text-sm text-[var(--ramkin-mist)]/50">
         {mode === 'register' ? (
           <>
-            Already registered?{' '}
+            {t('alreadyRegistered')}{' '}
             <Link to="/login/phone" className="text-[var(--ramkin-gold)] hover:underline">
-              Sign in with phone
+              {t('signInWithPhone')}
             </Link>
           </>
         ) : (
           <>
-            New here?{' '}
+            {t('newHere')}{' '}
             <Link to="/register/phone" className="text-[var(--ramkin-gold)] hover:underline">
-              Register with phone
+              {t('registerWithPhone')}
             </Link>
           </>
         )}
@@ -295,11 +298,11 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
           to={mode === 'register' ? '/register/email' : '/login/email'}
           className="text-[var(--ramkin-gold)]/70 hover:underline"
         >
-          Email
+          {t('email')}
         </Link>
         {' · '}
         <Link to="/" className="text-[var(--ramkin-gold)]/70 hover:underline">
-          Home
+          {t('home')}
         </Link>
       </p>
     </main>

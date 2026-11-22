@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
-import { BrandMark } from '../components/BrandMark';
+import { Navigate } from 'react-router-dom';
+import { CustomerShell } from '../components/CustomerShell';
 import { useAuth } from '../auth/AuthContext';
+import { useLocale } from '../i18n/LocaleContext';
 import { callUpdateCustomerProfile } from '../services/callables';
 
 export function ProfilePage() {
-  const { loading, user, displayName, configured, refreshClaims } = useAuth();
+  const { loading, user, displayName, configured, refreshClaims, signOut } = useAuth();
+  const { t } = useLocale();
   const [name, setName] = useState(displayName ?? '');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -18,7 +20,7 @@ export function ProfilePage() {
   if (!configured) {
     return (
       <main className="flex min-h-dvh items-center justify-center px-5 text-center text-[var(--ramkin-gold-soft)]">
-        Firebase not configured.
+        {t('configureFirebase')}
       </main>
     );
   }
@@ -26,7 +28,7 @@ export function ProfilePage() {
   if (loading) {
     return (
       <main className="flex min-h-dvh items-center justify-center text-[var(--ramkin-gold-soft)]">
-        Loading…
+        {t('loading')}
       </main>
     );
   }
@@ -43,7 +45,7 @@ export function ProfilePage() {
     try {
       const result = await callUpdateCustomerProfile({ displayName: name.trim() });
       setName(result.profile.displayName);
-      setMessage('Profile updated.');
+      setMessage(t('profileUpdated'));
       await refreshClaims();
     } catch (err) {
       setError(
@@ -57,66 +59,46 @@ export function ProfilePage() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-lg px-5 py-8 sm:px-6 sm:py-10">
-      <div className="mb-8 flex items-center gap-3">
-        <BrandMark size="sm" />
-        <div>
-          <h1
-            className="text-2xl tracking-[0.14em] text-[var(--ramkin-gold)] sm:text-3xl"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
-            Profile
-          </h1>
-          <p className="mt-1 text-sm text-[var(--ramkin-mist)]/50">
-            Safe fields only — email, phone, and role are not client-editable.
-          </p>
-        </div>
-      </div>
-
+    <CustomerShell
+      title={t('profileTitle')}
+      subtitle={t('profileSub')}
+      actions={
+        <button
+          type="button"
+          onClick={() => void signOut()}
+          className="text-[10px] tracking-[0.16em] text-[var(--ramkin-gold-soft)]/80 uppercase hover:text-[var(--ramkin-gold)]"
+        >
+          {t('signOut')}
+        </button>
+      }
+    >
       <form onSubmit={(e) => void onSave(e)} className="animate-fade-up space-y-4">
         <label className="block text-sm text-[var(--ramkin-mist)]/80">
-          Display name
+          {t('displayName')}
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/45 px-4 py-3 outline-none transition focus:border-[var(--ramkin-gold)]"
+            className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 text-[var(--ramkin-mist)] outline-none focus:border-[var(--ramkin-gold)]"
+            autoComplete="name"
             required
           />
         </label>
-        <label className="block text-sm text-[var(--ramkin-mist)]/50">
-          Email
-          <input
-            value={user.email ?? '—'}
-            readOnly
-            className="mt-2 w-full border border-white/10 bg-black/20 px-4 py-3 text-[var(--ramkin-mist)]/55"
-          />
-        </label>
-        <label className="block text-sm text-[var(--ramkin-mist)]/50">
-          Phone
-          <input
-            value={user.phoneNumber ?? 'Not linked'}
-            readOnly
-            className="mt-2 w-full border border-white/10 bg-black/20 px-4 py-3 text-[var(--ramkin-mist)]/55"
-          />
-        </label>
+        <p className="text-xs text-[var(--ramkin-mist)]/45">
+          {t('phone')}: {user.phoneNumber ?? '—'}
+        </p>
+        <p className="text-xs text-[var(--ramkin-mist)]/45">
+          {t('email')}: {user.email ?? '—'}
+        </p>
         <button
           type="submit"
           disabled={busy}
-          className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] px-6 py-3 text-sm tracking-[0.2em] text-black uppercase transition hover:bg-[var(--ramkin-gold-soft)] disabled:opacity-60"
+          className="w-full border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] py-3 text-sm font-medium tracking-[0.2em] text-black uppercase disabled:opacity-60"
         >
-          {busy ? 'Saving…' : 'Save'}
+          {busy ? t('saving') : t('save')}
         </button>
       </form>
-
       {message ? <p className="mt-4 text-sm text-[var(--ramkin-gold-soft)]">{message}</p> : null}
-      {error ? <p className="mt-4 text-sm text-red-300/90">{error}</p> : null}
-
-      <Link
-        to="/dashboard"
-        className="mt-8 inline-block text-sm text-[var(--ramkin-gold)] hover:underline"
-      >
-        ← Dashboard
-      </Link>
-    </main>
+      {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}
+    </CustomerShell>
   );
 }

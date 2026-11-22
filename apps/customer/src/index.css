@@ -6,9 +6,15 @@
   --ramkin-gold: #d4af37;
   --ramkin-gold-soft: #e6c96a;
   --ramkin-mist: #e8e4dc;
+  --ramkin-coffee: #5c3016;
   --ramkin-line: rgba(212, 175, 55, 0.28);
-  --font-display: 'Syne', 'Avenir Next', 'Segoe UI', sans-serif;
-  --font-body: 'Manrope', 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-display: 'Cairo', 'Tajawal', 'Syne', 'Avenir Next', sans-serif;
+  --font-body: 'Tajawal', 'Cairo', 'Manrope', 'Avenir Next', sans-serif;
+}
+
+html[lang='en'] {
+  --font-display: 'Syne', 'Cairo', 'Avenir Next', sans-serif;
+  --font-body: 'Manrope', 'Tajawal', 'Avenir Next', sans-serif;
 }
 
 *,
@@ -29,8 +35,9 @@ body {
   color: var(--ramkin-mist);
   background:
     radial-gradient(ellipse 90% 55% at 50% -15%, rgba(212, 175, 55, 0.2), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 0% 100%, rgba(92, 48, 22, 0.28), transparent 50%),
     radial-gradient(ellipse 45% 35% at 100% 90%, rgba(212, 175, 55, 0.07), transparent 50%),
-    linear-gradient(168deg, #030303 0%, #101010 48%, #070707 100%);
+    linear-gradient(168deg, #030303 0%, #12100c 48%, #070707 100%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
 }
@@ -39,6 +46,17 @@ body {
   from {
     opacity: 0;
     transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -65,8 +83,33 @@ body {
   }
 }
 
+@keyframes stamp-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes combo-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 24px 2px rgba(212, 175, 55, 0.35);
+  }
+}
+
 .animate-fade-up {
   animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.page-enter {
+  animation: page-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animate-gold-sheen {
@@ -76,4 +119,49 @@ body {
 .stamp-bar-fill {
   transform-origin: left center;
   animation: stamp-fill 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+html[dir='rtl'] .stamp-bar-fill {
+  transform-origin: right center;
+}
+
+.stamp-slot {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(232, 228, 220, 0.35);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.stamp-slot--filled {
+  border-color: rgba(212, 175, 55, 0.85);
+  background: linear-gradient(145deg, rgba(212, 175, 55, 0.92), rgba(120, 84, 20, 0.95));
+  color: #120e05;
+  animation: stamp-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.stamp-slot__inner {
+  font-weight: 600;
+}
+
+.combo-congrats {
+  animation: combo-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .page-enter,
+  .animate-gold-sheen,
+  .stamp-bar-fill,
+  .stamp-slot--filled,
+  .combo-congrats {
+    animation: none !important;
+  }
+
+  .stamp-slot--filled {
+    opacity: 1;
+    transform: none;
+  }
 }

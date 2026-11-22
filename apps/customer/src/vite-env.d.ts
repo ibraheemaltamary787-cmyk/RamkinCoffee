@@ -12,6 +12,10 @@ interface ImportMetaEnv {
   readonly VITE_USE_FIREBASE_EMULATORS?: string;
   /** DEV ONLY — Fake OTP 0000. Must stay unset/false in production builds. */
   readonly VITE_DEV_FAKE_OTP?: string;
+  /** Optional absolute landing URL for QR stickers (future prod domain). */
+  readonly VITE_QR_LANDING_URL?: string;
+  /** Official Foodics online menu URL for Order Online. */
+  readonly VITE_FOODICS_MENU_URL?: string;
 }
 
 interface ImportMeta {

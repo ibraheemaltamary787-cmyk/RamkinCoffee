@@ -58,9 +58,21 @@ describe('loyalty engine (functions)', () => {
       idempotencyKey: 'staff-abc-12345678',
     });
     assert.equal(ok.idempotencyKey, 'staff-abc-12345678');
+    assert.equal(ok.channel, 'in_store');
     assert.throws(() =>
       recordPurchaseSchema.parse({ customerId: 'cust', idempotencyKey: 'short' }),
     );
+  });
+
+  it('accepts online channel with order ref', () => {
+    const ok = recordPurchaseSchema.parse({
+      customerId: 'cust',
+      idempotencyKey: 'staff-online-12345678',
+      channel: 'online',
+      orderRef: 'foodics:abc-123',
+    });
+    assert.equal(ok.channel, 'online');
+    assert.equal(ok.orderRef, 'foodics:abc-123');
   });
 
   it('does not allow redeem without approve', () => {
