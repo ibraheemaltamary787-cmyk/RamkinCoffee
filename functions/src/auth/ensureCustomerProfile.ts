@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore, type Timestamp } from 'firebase-admin/firestore';
+import { ZodError } from 'zod';
 import {
   ACTIVITY_ACTIONS,
   createQrToken,
@@ -19,7 +20,20 @@ function toIso(value: Timestamp | null | undefined): string | null {
 
 export const ensureCustomerProfile = onCall({ cors: true }, async (request) => {
   const auth = requireAuth(request);
-  const input = ensureCustomerProfileSchema.parse(request.data ?? {});
+  let input;
+  try {
+    input = ensureCustomerProfileSchema.parse(request.data ?? {});
+  } catch (err) {
+    if (err instanceof ZodError) {
+      const issue = err.issues[0];
+      const path = issue?.path?.length ? issue.path.join('.') : 'input';
+      throw new HttpsError(
+        'invalid-argument',
+        `${path}: ${issue?.message ?? 'Invalid profile input.'}`,
+      );
+    }
+    throw err;
+  }
 
   // Staff must not accidentally get demoted via this customer path.
   if (auth.role === 'OWNER' || auth.role === 'MANAGER' || auth.role === 'STAFF') {

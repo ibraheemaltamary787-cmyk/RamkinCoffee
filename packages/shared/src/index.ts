@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { DEFAULT_PURCHASES_REQUIRED, type Role, type UserStatus } from './constants';
+import { optionalDisplayNameSchema } from './devFakeOtp';
 
 export * from './constants';
 export * from './loyalty';
@@ -44,7 +45,7 @@ export const staffRoleSchema = z.enum(['OWNER', 'MANAGER', 'STAFF']);
 export const userStatusSchema = z.enum(['active', 'disabled']);
 
 export const ensureCustomerProfileSchema = z.object({
-  displayName: z.string().trim().min(1).max(80).optional(),
+  displayName: optionalDisplayNameSchema,
 });
 
 export const updateCustomerProfileSchema = z.object({

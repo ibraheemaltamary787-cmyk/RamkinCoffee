@@ -4,6 +4,7 @@ import {
   DEV_FAKE_OTP_CODE,
   assertValidDevOtp,
   devFakeOtpSignInSchema,
+  formatFirebaseCallableError,
   isClientDevFakeOtpEnabled,
   isDevLocalIdentifier,
   isE164Phone,
@@ -68,13 +69,39 @@ describe('devFakeOtp identifiers', () => {
     );
   });
 
-  it('accepts null displayName on login (callable serialization)', () => {
-    const parsed = devFakeOtpSignInSchema.parse({
+  it('accepts null / empty displayName without throwing (callable serialization)', () => {
+    const withNull = devFakeOtpSignInSchema.parse({
       mode: 'login',
       identifier: '+15550101001',
       otp: '0000',
       displayName: null,
     });
-    assert.equal(parsed.displayName, null);
+    assert.equal(withNull.displayName, undefined);
+
+    const withEmpty = devFakeOtpSignInSchema.parse({
+      mode: 'register',
+      identifier: '+15550101001',
+      otp: '0000',
+      displayName: '   ',
+    });
+    assert.equal(withEmpty.displayName, undefined);
+  });
+
+  it('maps cryptic Firebase INTERNAL / not-found to local setup guidance', () => {
+    assert.match(
+      formatFirebaseCallableError({ code: 'functions/internal', message: 'INTERNAL' }, 'fallback'),
+      /emulators terminal/i,
+    );
+    assert.match(
+      formatFirebaseCallableError({ code: 'functions/not-found', message: 'not-found' }, 'fallback'),
+      /Functions emulator not reachable/i,
+    );
+    assert.equal(
+      formatFirebaseCallableError(
+        { code: 'functions/invalid-argument', message: 'Invalid OTP. Development Fake OTP is 0000.' },
+        'fallback',
+      ),
+      'Invalid OTP. Development Fake OTP is 0000.',
+    );
   });
 });

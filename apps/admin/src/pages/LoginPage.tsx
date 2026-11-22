@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { BRAND, DEV_FAKE_OTP_CODE } from '@ramkin/shared';
+import { BRAND, DEV_FAKE_OTP_CODE, formatFirebaseCallableError } from '@ramkin/shared';
 import { useAuth } from '../auth/AuthContext';
 import { LanguageSwitch } from '../components/LanguageSwitch';
 import { useLocale } from '../i18n/LocaleContext';
@@ -120,7 +120,7 @@ export function LoginPage() {
       const nextRole = await signIn(email, password);
       await finishStaffNav(nextRole);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('loginFailed'));
+      setError(formatFirebaseCallableError(err, t('loginFailed')));
     } finally {
       setBusy(false);
     }

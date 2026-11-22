@@ -63,13 +63,22 @@ export function assertValidDevOtp(otp: string): void {
   }
 }
 
+/**
+ * Callable JSON often sends `null` for omitted optionals; treat `""` / whitespace
+ * as absent so Zod does not throw (which Firebase surfaces as INTERNAL).
+ */
+export const optionalDisplayNameSchema = z.preprocess((value) => {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'string' && value.trim() === '') return undefined;
+  return value;
+}, z.string().trim().min(1).max(80).optional());
+
 export const devFakeOtpSignInSchema = z.object({
   mode: z.enum(['register', 'login']),
   /** E.164 phone, or a `@ramkin.local` identifier (login only for staff seeds). */
   identifier: z.string().trim().min(3).max(80),
   otp: z.string().trim().min(4).max(8),
-  // Callables may serialize omitted fields as null — accept nullish.
-  displayName: z.string().trim().min(1).max(80).nullish(),
+  displayName: optionalDisplayNameSchema,
 });
 
 export type DevFakeOtpSignInInput = z.infer<typeof devFakeOtpSignInSchema>;
@@ -84,4 +93,33 @@ export interface DevFakeOtpSignInResult {
   mode: 'register' | 'login';
   /** Always true — clients should show DEV banners. */
   devFakeOtp: true;
+}
+
+/** Map Firebase callable / Auth errors to actionable local-dev copy. */
+export function formatFirebaseCallableError(err: unknown, fallback: string): string {
+  const code =
+    err && typeof err === 'object' && 'code' in err ? String((err as { code: unknown }).code) : '';
+  const message =
+    err && typeof err === 'object' && 'message' in err && typeof (err as { message: unknown }).message === 'string'
+      ? (err as { message: string }).message.trim()
+      : err instanceof Error
+        ? err.message.trim()
+        : '';
+
+  if (
+    code === 'functions/not-found' ||
+    /^not-found$/i.test(message)
+  ) {
+    return 'Functions emulator not reachable. Run `npm run emulators`, keep VITE_USE_FIREBASE_EMULATORS=true, then restart Vite.';
+  }
+  if (code === 'functions/unavailable' || /unavailable/i.test(message)) {
+    return 'Functions emulator unavailable. Wait until Terminal A shows “All emulators ready!” and retry.';
+  }
+  if (code === 'functions/internal' || /^internal$/i.test(message)) {
+    // Prefer a specific server message when Functions returned one via HttpsError.
+    if (message && !/^internal$/i.test(message)) return message;
+    return 'Internal Functions error. Check the emulators terminal log. Confirm Auth+Functions+Firestore are up, apps/*.env has VITE_USE_FIREBASE_EMULATORS=true and VITE_DEV_FAKE_OTP=true, then re-run `npm run seed:dev-accounts`.';
+  }
+  if (message) return message;
+  return fallback;
 }

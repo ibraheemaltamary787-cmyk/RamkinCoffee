@@ -46,6 +46,18 @@ describe('auth schemas', () => {
     assert.deepEqual(ensureCustomerProfileSchema.parse({}), {});
   });
 
+  it('treats null / empty displayName as absent for ensureCustomerProfile', () => {
+    assert.equal(
+      ensureCustomerProfileSchema.parse({ displayName: null }).displayName,
+      undefined,
+    );
+    assert.equal(ensureCustomerProfileSchema.parse({ displayName: '' }).displayName, undefined);
+    assert.equal(
+      ensureCustomerProfileSchema.parse({ displayName: '  Guest  ' }).displayName,
+      'Guest',
+    );
+  });
+
   it('blocks OWNER assignment via setStaffRole schema', () => {
     assert.throws(() => setStaffRoleSchema.parse({ uid: 'u1', role: 'OWNER' }));
   });

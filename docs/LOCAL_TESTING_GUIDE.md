@@ -40,6 +40,10 @@ VITE_DEV_FAKE_OTP=true
 
 `VITE_DEV_FAKE_OTP=true` is **DEV only**. Production Hosting builds must leave it unset/`false`. Vite also blocks Fake OTP when `import.meta.env.PROD` is true.
 
+**After copying `.env`, restart Vite** (`Ctrl+C` then `npm run dev:customer` / `dev:admin`). Vite only reads env at startup.
+
+`npm run emulators` builds `@ramkin/shared` then Functions before starting — do not skip Terminal A.
+
 ---
 
 ## Start the local stack (3 terminals)
@@ -52,6 +56,8 @@ npm run emulators
 
 Wait until: `All emulators ready!`  
 Emulator UI: http://127.0.0.1:4000
+
+If the Functions build fails with `Cannot find module '@ramkin/shared'`, run `npm run build -w @ramkin/shared` once, then retry `npm run emulators`.
 
 | Service   | Port |
 | --------- | ---- |
@@ -107,6 +113,18 @@ npx tsx scripts\uat-fake-otp.local.ts
 - Prefer `127.0.0.1` over `localhost` if Auth emulator CORS/IPv6 issues appear.
 - Do **not** run `firebase deploy` for Hosting or Functions on Spark keep-free.
 - Closing Terminal A wipes Auth/Firestore emulator data — re-run `npm run seed:dev-accounts`.
+
+## Troubleshooting Fake OTP (`0000`)
+
+| Symptom | Likely cause | Fix |
+| ------- | ------------ | --- |
+| `INTERNAL` / “internal” after entering `0000` | Functions threw (bad input / token mint) or emulators miswired | Read **Terminal A** Functions log. Confirm amber **Local Firebase emulators** + **DEV OTP mode** banners. Restart emulators, re-seed, restart Vite. |
+| `Functions emulator not reachable` / `not-found` | Vite not using emulators, or Functions not running | `VITE_USE_FIREBASE_EMULATORS=true` in both app `.env` files; Terminal A must include **Functions** on port **5001**; restart Vite. |
+| No account / run seed first | Emulator Auth empty after restart | `npm run seed:dev-accounts` |
+| Invalid OTP | Code is not exactly `0000` | Use ASCII `0000` (not Arabic-Indic digits) |
+| No DEV OTP banner | Fake OTP off in this build | Set `VITE_DEV_FAKE_OTP=true`, use `npm run dev:*` (not a production build), restart Vite |
+
+Hard rules: never project `hloe-45d43`; no Blaze upgrade; no Hosting publish; Fake OTP stays DEV-only.
 
 ---
 
