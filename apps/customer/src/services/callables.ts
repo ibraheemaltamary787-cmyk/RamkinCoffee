@@ -1,12 +1,33 @@
 import { httpsCallable } from 'firebase/functions';
 import type {
   CustomerProfileDto,
+  DevFakeOtpSignInInput,
+  DevFakeOtpSignInResult,
   EnsureCustomerProfileInput,
+  ListMyHistoryInput,
   LoyaltyProgressDto,
+  MyPurchaseDto,
+  MyRewardRequestDto,
   RequestRewardInput,
   UpdateCustomerProfileInput,
 } from '@ramkin/shared';
 import { getFirebaseFunctions } from './firebase';
+import { isDevFakeOtpEnabled } from './devFakeOtp';
+
+/** DEV ONLY — rejected by Functions outside emulator / ALLOW_DEV_FAKE_OTP. */
+export async function callDevFakeOtpSignIn(
+  input: DevFakeOtpSignInInput,
+): Promise<DevFakeOtpSignInResult> {
+  if (!isDevFakeOtpEnabled()) {
+    throw new Error('Development Fake OTP is disabled in this build.');
+  }
+  const fn = httpsCallable<DevFakeOtpSignInInput, DevFakeOtpSignInResult>(
+    getFirebaseFunctions(),
+    'devFakeOtpSignIn',
+  );
+  const result = await fn(input);
+  return result.data;
+}
 
 export async function callEnsureCustomerProfile(input: EnsureCustomerProfileInput = {}): Promise<{
   ok: true;
@@ -83,4 +104,24 @@ export async function callRequestReward(input: RequestRewardInput = {}): Promise
   >(getFirebaseFunctions(), 'requestReward');
   const result = await fn(input);
   return result.data;
+}
+
+export async function callListMyPurchases(
+  input: ListMyHistoryInput = {},
+): Promise<{ ok: true; purchases: MyPurchaseDto[] }> {
+  const fn = httpsCallable<ListMyHistoryInput, { ok: true; purchases: MyPurchaseDto[] }>(
+    getFirebaseFunctions(),
+    'listMyPurchases',
+  );
+  return (await fn(input)).data;
+}
+
+export async function callListMyRewardRequests(
+  input: ListMyHistoryInput = {},
+): Promise<{ ok: true; requests: MyRewardRequestDto[] }> {
+  const fn = httpsCallable<ListMyHistoryInput, { ok: true; requests: MyRewardRequestDto[] }>(
+    getFirebaseFunctions(),
+    'listMyRewardRequests',
+  );
+  return (await fn(input)).data;
 }

@@ -77,5 +77,7 @@ describe('Firebase project hygiene (Phase 7)', () => {
 
     const envExample = fs.readFileSync(path.join(repoRoot, '.env.example'), 'utf8');
     assert.match(envExample, /^VITE_USE_FIREBASE_EMULATORS=true$/m);
+    assert.match(envExample, /^VITE_DEV_FAKE_OTP=true$/m);
+    assert.match(envExample, /DEV ONLY — Fake OTP/);
   });
 });

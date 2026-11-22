@@ -40,6 +40,7 @@ export const ACTIVITY_ACTIONS = {
   ENABLE_ACCOUNT: 'account.enable',
   UPDATE_PROFILE: 'profile.update',
   ENSURE_CUSTOMER: 'auth.ensure_customer',
+  DEV_FAKE_OTP: 'auth.dev_fake_otp',
   PURCHASE_RECORDED: 'purchase.recorded',
   REWARD_REQUESTED: 'reward.requested',
   REWARD_APPROVED: 'reward.approved',

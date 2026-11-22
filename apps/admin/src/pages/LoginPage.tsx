@@ -1,17 +1,23 @@
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { BRAND } from '@ramkin/shared';
+import { BRAND, DEV_FAKE_OTP_CODE } from '@ramkin/shared';
 import { useAuth } from '../auth/AuthContext';
 import { callAcceptStaffInvite } from '../services/callables';
+import { isDevFakeOtpEnabled } from '../services/devFakeOtp';
 
 export function LoginPage() {
-  const { configured, loading, user, isStaff, signIn, refreshClaims } = useAuth();
+  const { configured, loading, user, isStaff, signIn, signInWithFakeOtp, refreshClaims } =
+    useAuth();
   const navigate = useNavigate();
+  const fakeOtp = isDevFakeOtpEnabled();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [identifier, setIdentifier] = useState('owner@ramkin.local');
+  const [otp, setOtp] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [inviteNote, setInviteNote] = useState<string | null>(null);
+  const [usePassword, setUsePassword] = useState(!fakeOtp);
 
   if (!loading && user && isStaff) {
     return <Navigate to="/app" replace />;
@@ -83,6 +89,15 @@ export function LoginPage() {
     );
   }
 
+  async function finishStaffNav(nextRole: string | null) {
+    if (nextRole && ['OWNER', 'MANAGER', 'STAFF'].includes(nextRole)) {
+      navigate('/app', { replace: true });
+      return;
+    }
+    const accepted = await tryAcceptInvite();
+    navigate(accepted ? '/app' : '/bootstrap', { replace: true });
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -94,13 +109,15 @@ export function LoginPage() {
         );
         return;
       }
-      const nextRole = await signIn(email, password);
-      if (nextRole && ['OWNER', 'MANAGER', 'STAFF'].includes(nextRole)) {
-        navigate('/app', { replace: true });
+
+      if (fakeOtp && !usePassword) {
+        const nextRole = await signInWithFakeOtp(identifier, otp);
+        await finishStaffNav(nextRole);
         return;
       }
-      const accepted = await tryAcceptInvite();
-      navigate(accepted ? '/app' : '/bootstrap', { replace: true });
+
+      const nextRole = await signIn(email, password);
+      await finishStaffNav(nextRole);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign-in failed');
     } finally {
@@ -142,29 +159,66 @@ export function LoginPage() {
         </p>
       ) : null}
 
-      <form onSubmit={onSubmit} className="relative space-y-4">
-        <label className="block text-sm text-[var(--ramkin-mist)]/80">
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 outline-none focus:border-[var(--ramkin-gold)]"
-            autoComplete="username"
-            required
-          />
-        </label>
-        <label className="block text-sm text-[var(--ramkin-mist)]/80">
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 outline-none focus:border-[var(--ramkin-gold)]"
-            autoComplete="current-password"
-            required
-          />
-        </label>
+      {fakeOtp && !usePassword ? (
+        <p className="relative mb-4 border border-amber-500/35 bg-amber-950/50 px-4 py-3 text-xs leading-relaxed text-amber-100/90">
+          DEV Fake OTP: use seeded identifiers (e.g. <code>owner@ramkin.local</code>) and code{' '}
+          <strong>{DEV_FAKE_OTP_CODE}</strong>. Not available in production builds.
+        </p>
+      ) : null}
+
+      <form onSubmit={(e) => void onSubmit(e)} className="relative space-y-4">
+        {fakeOtp && !usePassword ? (
+          <>
+            <label className="block text-sm text-[var(--ramkin-mist)]/80">
+              Identifier
+              <input
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="owner@ramkin.local"
+                className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 outline-none focus:border-[var(--ramkin-gold)]"
+                autoComplete="username"
+                required
+              />
+            </label>
+            <label className="block text-sm text-[var(--ramkin-mist)]/80">
+              DEV OTP
+              <input
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder={DEV_FAKE_OTP_CODE}
+                className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 tracking-[0.3em] outline-none focus:border-[var(--ramkin-gold)]"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                required
+              />
+            </label>
+          </>
+        ) : (
+          <>
+            <label className="block text-sm text-[var(--ramkin-mist)]/80">
+              Email
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 outline-none focus:border-[var(--ramkin-gold)]"
+                autoComplete="username"
+                required
+              />
+            </label>
+            <label className="block text-sm text-[var(--ramkin-mist)]/80">
+              Password
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 outline-none focus:border-[var(--ramkin-gold)]"
+                autoComplete="current-password"
+                required
+              />
+            </label>
+          </>
+        )}
         <button
           type="submit"
           disabled={busy}
@@ -174,13 +228,25 @@ export function LoginPage() {
         </button>
       </form>
 
+      {fakeOtp ? (
+        <button
+          type="button"
+          className="relative mt-4 w-full text-xs text-[var(--ramkin-gold-soft)]/70 underline-offset-4 hover:underline"
+          onClick={() => {
+            setUsePassword((v) => !v);
+            setError(null);
+          }}
+        >
+          {usePassword ? 'Use DEV Fake OTP instead' : 'Use email / password instead'}
+        </button>
+      ) : null}
+
       {error && <p className="relative mt-4 text-sm text-red-300">{error}</p>}
 
       <p className="relative mt-8 text-center text-xs leading-relaxed text-[var(--ramkin-mist)]/45">
-        Emulator: add Email/Password user in Emulator UI (:4000), sign in here, then{' '}
-        <code className="text-[var(--ramkin-gold-soft)]">/bootstrap</code> with{' '}
-        <code className="text-[var(--ramkin-gold-soft)]">functions/.secret.local</code>. Invited
-        staff accept their invite after sign-in. No Hosting publish / Blaze.
+        {fakeOtp
+          ? 'Seed accounts with npm run seed:dev-accounts, then sign in with identifier + 0000. No Hosting publish / Blaze.'
+          : 'Emulator: add Email/Password user in Emulator UI (:4000), sign in here, then /bootstrap with functions/.secret.local. No Hosting publish / Blaze.'}
       </p>
     </main>
   );

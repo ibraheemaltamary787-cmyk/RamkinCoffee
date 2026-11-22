@@ -64,9 +64,12 @@ In **each** app `.env`, set:
 
 ```bash
 VITE_USE_FIREBASE_EMULATORS=true
+VITE_DEV_FAKE_OTP=true
 ```
 
 Public `VITE_FIREBASE_*` values for `ramkincoffee` are already in `.env.example` (safe client IDs).
+
+**DEV Fake OTP (`0000`):** preferred Spark-safe phone path. Seed with `npm run seed:dev-accounts`, then customer phone / admin `@ramkin.local` + OTP `0000`. Production builds reject Fake OTP — see [`AUTHENTICATION_ARCHITECTURE.md`](./AUTHENTICATION_ARCHITECTURE.md) and [`LOCAL_TESTING_GUIDE.md`](./LOCAL_TESTING_GUIDE.md).
 
 ### Functions bootstrap secret (emulator only)
 

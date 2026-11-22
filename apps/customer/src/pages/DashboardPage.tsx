@@ -206,7 +206,13 @@ export function DashboardPage() {
         </section>
       ) : null}
 
-      <nav className="mt-8 flex gap-5 text-sm">
+      <nav className="mt-8 flex flex-wrap gap-5 text-sm">
+        <Link to="/history" className="text-[var(--ramkin-gold)] hover:underline">
+          History
+        </Link>
+        <Link to="/rewards" className="text-[var(--ramkin-gold)] hover:underline">
+          Rewards
+        </Link>
         <Link to="/profile" className="text-[var(--ramkin-gold)] hover:underline">
           Profile
         </Link>

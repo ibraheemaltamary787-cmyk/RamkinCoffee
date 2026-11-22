@@ -1,9 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth';
-import { BRAND } from '@ramkin/shared';
+import {
+  RecaptchaVerifier,
+  signInWithCustomToken,
+  signInWithPhoneNumber,
+  type ConfirmationResult,
+} from 'firebase/auth';
+import { BRAND, DEV_FAKE_OTP_CODE, isE164Phone, toE164Phone } from '@ramkin/shared';
 import { BrandMark } from '../components/BrandMark';
 import { useAuth } from '../auth/AuthContext';
+import { callDevFakeOtpSignIn } from '../services/callables';
+import { isDevFakeOtpEnabled } from '../services/devFakeOtp';
 import {
   getFirebaseAuth,
   isFirebaseConfigured,
@@ -12,13 +19,6 @@ import {
 
 interface PhoneAuthPageProps {
   mode: 'login' | 'register';
-}
-
-function normalizeE164(raw: string): string {
-  const trimmed = raw.trim().replace(/[\s()-]/g, '');
-  if (trimmed.startsWith('+')) return trimmed;
-  if (trimmed.startsWith('00')) return `+${trimmed.slice(2)}`;
-  return `+${trimmed}`;
 }
 
 export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
@@ -34,10 +34,10 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
   const confirmationRef = useRef<ConfirmationResult | null>(null);
   const verifierRef = useRef<RecaptchaVerifier | null>(null);
   const usingEmulators = isUsingFirebaseEmulators();
+  const fakeOtp = isDevFakeOtpEnabled();
 
   useEffect(() => {
     if (user && step === 'phone') {
-      // Already signed in — send to dashboard.
       navigate('/dashboard', { replace: true });
     }
   }, [user, step, navigate]);
@@ -67,7 +67,7 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
 
     if (!configured || !isFirebaseConfigured()) {
       setError(
-        'Firebase is not configured yet. Add VITE_FIREBASE_* to apps/customer/.env from a new RAMKIN project, enable Phone Auth (or use Emulators with VITE_USE_FIREBASE_EMULATORS=true).',
+        'Firebase is not configured yet. Add VITE_FIREBASE_* to apps/customer/.env and enable emulators for Fake OTP.',
       );
       return;
     }
@@ -77,9 +77,16 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
       return;
     }
 
-    const e164 = normalizeE164(phone);
-    if (!/^\+[1-9]\d{7,14}$/.test(e164)) {
+    const e164 = toE164Phone(phone);
+    if (!isE164Phone(e164)) {
       setError('Enter a valid phone in E.164 format, e.g. +9627XXXXXXXX.');
+      return;
+    }
+
+    if (fakeOtp) {
+      setPhone(e164);
+      setStep('code');
+      setMessage(`DEV OTP mode: enter ${DEV_FAKE_OTP_CODE} (no SMS).`);
       return;
     }
 
@@ -99,14 +106,52 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
       setError(
         err instanceof Error
           ? err.message
-          : 'Failed to send OTP. Prefer Email/Password on Spark, or use Auth Emulator / Console test numbers.',
+          : 'Failed to send OTP. Prefer DEV Fake OTP with emulators on Spark.',
       );
     } finally {
       setBusy(false);
     }
   }
 
+  async function verifyFakeOtp(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      if (!isDevFakeOtpEnabled()) {
+        throw new Error('Development Fake OTP is disabled in this build.');
+      }
+      const e164 = toE164Phone(phone);
+      const result = await callDevFakeOtpSignIn(
+        mode === 'register'
+          ? {
+              mode: 'register',
+              identifier: e164,
+              otp: code.trim(),
+              displayName: displayName.trim(),
+            }
+          : {
+              mode: 'login',
+              identifier: e164,
+              otp: code.trim(),
+            },
+      );
+      await signInWithCustomToken(getFirebaseAuth(), result.customToken);
+      await ensureProfile(mode === 'register' ? displayName.trim() : undefined);
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Invalid code or profile setup failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function verifyCode(e: React.FormEvent) {
+    if (fakeOtp) {
+      await verifyFakeOtp(e);
+      return;
+    }
+
     e.preventDefault();
     setError(null);
     if (!confirmationRef.current) {
@@ -136,17 +181,24 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
           {BRAND.name}
         </h1>
         <p className="mt-2 text-xs tracking-[0.3em] text-[var(--ramkin-gold-soft)]/70 uppercase">
-          Phone OTP · optional
+          {fakeOtp ? 'Phone · DEV Fake OTP' : 'Phone OTP · optional'}
         </p>
-        <p className="mt-3 max-w-sm text-xs leading-relaxed text-[var(--ramkin-mist)]/50">
-          Spark keep-free uses Email/Password by default. Phone OTP is for Auth Emulator or Console
-          test numbers only — no production SMS.
-        </p>
+        {fakeOtp ? (
+          <p className="mt-3 max-w-sm border border-amber-500/35 bg-amber-950/50 px-3 py-2 text-xs leading-relaxed text-amber-100/90">
+            Development Fake OTP is on. Use code <strong>{DEV_FAKE_OTP_CODE}</strong> after entering
+            your mobile. Production builds reject this path.
+          </p>
+        ) : (
+          <p className="mt-3 max-w-sm text-xs leading-relaxed text-[var(--ramkin-mist)]/50">
+            Spark keep-free uses Email/Password by default. Phone OTP is for Auth Emulator or Console
+            test numbers only — no production SMS.
+          </p>
+        )}
       </div>
 
       {step === 'phone' ? (
         <form
-          onSubmit={sendCode}
+          onSubmit={(e) => void sendCode(e)}
           className="animate-fade-up space-y-4"
           style={{ animationDelay: '80ms' }}
         >
@@ -179,16 +231,17 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
             disabled={busy}
             className="w-full border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] py-3 text-sm font-medium tracking-[0.2em] text-black uppercase disabled:opacity-60"
           >
-            {busy ? 'Sending…' : 'Send OTP'}
+            {busy ? 'Sending…' : fakeOtp ? 'Continue' : 'Send OTP'}
           </button>
         </form>
       ) : (
-        <form onSubmit={verifyCode} className="animate-fade-up space-y-4">
+        <form onSubmit={(e) => void verifyCode(e)} className="animate-fade-up space-y-4">
           <label className="block text-left text-sm text-[var(--ramkin-mist)]/80">
             Verification code
             <input
               value={code}
               onChange={(e) => setCode(e.target.value)}
+              placeholder={fakeOtp ? DEV_FAKE_OTP_CODE : undefined}
               className="mt-2 w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 tracking-[0.3em] text-[var(--ramkin-mist)] outline-none focus:border-[var(--ramkin-gold)]"
               inputMode="numeric"
               autoComplete="one-time-code"
@@ -222,12 +275,27 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
       {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
 
       <p className="mt-8 text-center text-sm text-[var(--ramkin-mist)]/50">
-        Prefer Email/Password?{' '}
+        {mode === 'register' ? (
+          <>
+            Already registered?{' '}
+            <Link to="/login/phone" className="text-[var(--ramkin-gold)] hover:underline">
+              Sign in with phone
+            </Link>
+          </>
+        ) : (
+          <>
+            New here?{' '}
+            <Link to="/register/phone" className="text-[var(--ramkin-gold)] hover:underline">
+              Register with phone
+            </Link>
+          </>
+        )}
+        {' · '}
         <Link
-          to={mode === 'register' ? '/register' : '/login'}
-          className="text-[var(--ramkin-gold)] hover:underline"
+          to={mode === 'register' ? '/register/email' : '/login/email'}
+          className="text-[var(--ramkin-gold)]/70 hover:underline"
         >
-          {mode === 'register' ? 'Register with email' : 'Sign in with email'}
+          Email
         </Link>
         {' · '}
         <Link to="/" className="text-[var(--ramkin-gold)]/70 hover:underline">

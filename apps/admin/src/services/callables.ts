@@ -10,6 +10,8 @@ import type {
   CustomerDetailDto,
   CustomerListItemDto,
   CustomerLookupDto,
+  DevFakeOtpSignInInput,
+  DevFakeOtpSignInResult,
   DisableAccountInput,
   ExportReportInput,
   RotateCustomerQrInput,
@@ -30,6 +32,7 @@ import type {
   UpdateLoyaltySettingsInput,
 } from '@ramkin/shared';
 import { getFirebaseFunctions } from './firebase';
+import { isDevFakeOtpEnabled } from './devFakeOtp';
 
 export async function callRecordLogin(): Promise<void> {
   const fn = httpsCallable<{ client: 'admin' }, { ok: true }>(
@@ -37,6 +40,20 @@ export async function callRecordLogin(): Promise<void> {
     'recordLogin',
   );
   await fn({ client: 'admin' });
+}
+
+/** DEV ONLY — Fake OTP 0000 for @ramkin.local / phone staff seeds. */
+export async function callDevFakeOtpSignIn(
+  input: DevFakeOtpSignInInput,
+): Promise<DevFakeOtpSignInResult> {
+  if (!isDevFakeOtpEnabled()) {
+    throw new Error('Development Fake OTP is disabled in this build.');
+  }
+  const fn = httpsCallable<DevFakeOtpSignInInput, DevFakeOtpSignInResult>(
+    getFirebaseFunctions(),
+    'devFakeOtpSignIn',
+  );
+  return (await fn(input)).data;
 }
 
 export async function callBootstrapOwner(input: BootstrapOwnerInput) {

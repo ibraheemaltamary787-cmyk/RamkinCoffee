@@ -28,6 +28,8 @@ export { recordLogin } from './auth/recordLogin';
 export { bootstrapOwner } from './auth/bootstrapOwner';
 export { setStaffRole } from './auth/setStaffRole';
 export { disableAccount } from './auth/disableAccount';
+/** DEV ONLY — Fake OTP 0000 → custom token; rejected outside emulator / ALLOW_DEV_FAKE_OTP. */
+export { devFakeOtpSignIn } from './auth/devFakeOtp';
 
 export { recordPurchase } from './loyalty/recordPurchase';
 export { lookupCustomerByPhone, lookupCustomerByQr } from './loyalty/lookupCustomer';
@@ -37,6 +39,7 @@ export { approveReward } from './loyalty/approveReward';
 export { rejectReward } from './loyalty/rejectReward';
 export { redeemReward } from './loyalty/redeemReward';
 export { getLoyaltyProgress } from './loyalty/getLoyaltyProgress';
+export { listMyPurchases, listMyRewardRequests } from './loyalty/listMyHistory';
 export { updateLoyaltySettings, getLoyaltySettings } from './loyalty/updateLoyaltySettings';
 export { listOpenRewards } from './loyalty/listOpenRewards';
 

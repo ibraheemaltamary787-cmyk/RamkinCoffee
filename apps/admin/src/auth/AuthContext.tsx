@@ -9,13 +9,15 @@ import {
 } from 'react';
 import {
   onAuthStateChanged,
+  signInWithCustomToken,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   type User,
 } from 'firebase/auth';
 import { isStaffRole, type Role, type StaffRole } from '@ramkin/shared';
 import { getFirebaseAuth, isFirebaseConfigured } from '../services/firebase';
-import { callRecordLogin } from '../services/callables';
+import { callDevFakeOtpSignIn, callRecordLogin } from '../services/callables';
+import { isDevFakeOtpEnabled } from '../services/devFakeOtp';
 
 interface AuthState {
   configured: boolean;
@@ -25,6 +27,8 @@ interface AuthState {
   isStaff: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<Role | null>;
+  /** DEV ONLY — identifier (@ramkin.local or phone) + Fake OTP 0000. */
+  signInWithFakeOtp: (identifier: string, otp: string) => Promise<Role | null>;
   signOut: () => Promise<void>;
   refreshClaims: () => Promise<void>;
 }
@@ -93,6 +97,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [configured],
   );
 
+  const signInWithFakeOtp = useCallback(
+    async (identifier: string, otp: string) => {
+      if (!configured) {
+        throw new Error('Firebase not configured');
+      }
+      if (!isDevFakeOtpEnabled()) {
+        throw new Error('Development Fake OTP is disabled in this build.');
+      }
+      const result = await callDevFakeOtpSignIn({
+        mode: 'login',
+        identifier: identifier.trim(),
+        otp: otp.trim(),
+      });
+      const cred = await signInWithCustomToken(getFirebaseAuth(), result.customToken);
+      await cred.user.getIdToken(true);
+      const nextRole = await readRole(cred.user);
+      setUser(cred.user);
+      setRole(nextRole);
+      if (isStaffRole(nextRole)) {
+        try {
+          await callRecordLogin();
+        } catch {
+          // Best-effort until Functions are live.
+        }
+      }
+      return nextRole;
+    },
+    [configured],
+  );
+
   const signOut = useCallback(async () => {
     if (!configured) return;
     await firebaseSignOut(getFirebaseAuth());
@@ -113,10 +147,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isStaff: isStaffRole(role),
       error,
       signIn,
+      signInWithFakeOtp,
       signOut,
       refreshClaims,
     }),
-    [configured, loading, user, role, error, signIn, signOut, refreshClaims],
+    [configured, loading, user, role, error, signIn, signInWithFakeOtp, signOut, refreshClaims],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
