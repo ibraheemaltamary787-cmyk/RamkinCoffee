@@ -1,100 +1,117 @@
 import { Link } from 'react-router-dom';
 import { BRAND, DEV_FAKE_OTP_CODE } from '@ramkin/shared';
 import { BrandMark } from '../components/BrandMark';
+import { LanguageSwitch } from '../components/LanguageSwitch';
 import { useAuth } from '../auth/AuthContext';
+import { useLocale } from '../i18n/LocaleContext';
 import { isDevFakeOtpEnabled } from '../services/devFakeOtp';
-import { isUsingFirebaseEmulators } from '../services/firebase';
 
 export function LandingPage() {
   const { user } = useAuth();
-  const usingEmulators = isUsingFirebaseEmulators();
+  const { t } = useLocale();
   const fakeOtp = isDevFakeOtpEnabled();
 
   return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-5 py-16 text-center sm:px-6">
+    <main className="relative flex min-h-dvh flex-col overflow-hidden">
       <div
         className="pointer-events-none absolute inset-0"
         style={{
+          backgroundImage: `
+            radial-gradient(ellipse 90% 55% at 50% -8%, rgba(212,175,55,0.26), transparent 55%),
+            radial-gradient(ellipse 55% 40% at 0% 100%, rgba(92,48,22,0.45), transparent 55%),
+            radial-gradient(ellipse 45% 35% at 100% 70%, rgba(212,175,55,0.08), transparent 50%),
+            linear-gradient(168deg, #030303 0%, #12100c 48%, #070707 100%)
+          `,
+        }}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.14]"
+        style={{
           backgroundImage:
-            'linear-gradient(rgba(212,175,55,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.035) 1px, transparent 1px)',
-          backgroundSize: '56px 56px',
-          maskImage: 'radial-gradient(ellipse at center, black 15%, transparent 72%)',
+            'linear-gradient(rgba(212,175,55,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.07) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+          maskImage: 'radial-gradient(ellipse at center, black 12%, transparent 72%)',
         }}
         aria-hidden
       />
 
-      <div className="animate-fade-up relative mb-8">
-        <BrandMark size="lg" />
-      </div>
+      <div className="relative z-10 flex flex-1 flex-col px-5 pb-12 pt-6 sm:px-8">
+        <div className="flex justify-end">
+          <LanguageSwitch />
+        </div>
 
-      <h1
-        className="animate-fade-up relative text-5xl font-semibold tracking-[0.22em] text-[var(--ramkin-gold)] sm:text-6xl"
-        style={{ fontFamily: 'var(--font-display)', animationDelay: '70ms' }}
-      >
-        {BRAND.name}
-      </h1>
+        <div className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center text-center">
+          <div className="animate-fade-up mb-6">
+            <BrandMark size="lg" />
+          </div>
 
-      <p
-        className="animate-fade-up animate-gold-sheen relative mt-4 max-w-md text-sm font-medium tracking-[0.38em] uppercase text-[var(--ramkin-gold-soft)]/85"
-        style={{ animationDelay: '140ms' }}
-      >
-        {BRAND.tagline}
-      </p>
-
-      <p
-        className="animate-fade-up relative mt-8 max-w-md text-base leading-relaxed text-[var(--ramkin-mist)]/68"
-        style={{ animationDelay: '210ms' }}
-      >
-        Collect stamps toward your next free drink. Staff record every purchase — you track progress
-        and request rewards when ready.
-      </p>
-
-      <div
-        className="animate-fade-up relative mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
-        style={{ animationDelay: '280ms' }}
-      >
-        {user ? (
-          <Link
-            to="/dashboard"
-            className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] px-8 py-3 text-sm font-medium tracking-[0.2em] text-black uppercase transition hover:bg-[var(--ramkin-gold-soft)]"
+          <h1
+            className="animate-fade-up text-5xl font-semibold tracking-[0.2em] text-[var(--ramkin-gold)] sm:text-6xl"
+            style={{ fontFamily: 'var(--font-display)', animationDelay: '60ms' }}
           >
-            Open dashboard
-          </Link>
-        ) : (
-          <>
-            <Link
-              to="/register"
-              className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] px-8 py-3 text-sm font-medium tracking-[0.2em] text-black uppercase transition hover:bg-[var(--ramkin-gold-soft)]"
-            >
-              Register
-            </Link>
-            <Link
-              to="/login"
-              className="border border-[var(--ramkin-gold)]/45 px-8 py-3 text-sm font-medium tracking-[0.2em] text-[var(--ramkin-gold)] uppercase transition hover:border-[var(--ramkin-gold)] hover:bg-white/5"
-            >
-              Sign in
-            </Link>
-          </>
-        )}
-      </div>
+            {BRAND.name}
+          </h1>
 
-      {fakeOtp && !user ? (
-        <p
-          className="animate-fade-up relative mt-8 max-w-sm border border-amber-500/30 bg-amber-950/40 px-4 py-3 text-xs leading-relaxed text-amber-100/85"
-          style={{ animationDelay: '360ms' }}
-        >
-          DEV Fake OTP mode: register or sign in with your mobile, then enter{' '}
-          <strong>{DEV_FAKE_OTP_CODE}</strong>. No SMS. Production builds reject this.
-        </p>
-      ) : usingEmulators && !user ? (
-        <p
-          className="animate-fade-up relative mt-8 max-w-sm text-xs leading-relaxed text-[var(--ramkin-mist)]/40"
-          style={{ animationDelay: '360ms' }}
-        >
-          Local emulators: Email/Password works without SMS. Optional phone OTP prints the code in
-          the emulators terminal.
-        </p>
-      ) : null}
+          <p
+            className="animate-fade-up animate-gold-sheen mt-4 text-sm font-medium tracking-[0.28em] text-[var(--ramkin-gold-soft)]/90 uppercase"
+            style={{ animationDelay: '120ms' }}
+          >
+            {t('brandTagline')}
+          </p>
+
+          <p
+            className="animate-fade-up mt-8 max-w-md text-lg leading-snug text-[var(--ramkin-mist)] sm:text-xl"
+            style={{ fontFamily: 'var(--font-display)', animationDelay: '180ms' }}
+          >
+            {t('loyaltyOffer')}
+          </p>
+          <p
+            className="animate-fade-up mt-3 max-w-md text-sm leading-relaxed text-[var(--ramkin-mist)]/65"
+            style={{ animationDelay: '220ms' }}
+          >
+            {t('loyaltyOfferSub')}
+          </p>
+
+          <div
+            className="animate-fade-up mt-10 flex flex-wrap items-center justify-center gap-3"
+            style={{ animationDelay: '280ms' }}
+          >
+            {user ? (
+              <Link
+                to="/home"
+                className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] px-8 py-3 text-sm font-medium tracking-[0.2em] text-black uppercase transition hover:bg-[var(--ramkin-gold-soft)]"
+              >
+                {t('openHome')}
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/register"
+                  className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] px-8 py-3 text-sm font-medium tracking-[0.2em] text-black uppercase transition hover:bg-[var(--ramkin-gold-soft)]"
+                >
+                  {t('join')}
+                </Link>
+                <Link
+                  to="/login"
+                  className="border border-[var(--ramkin-gold)]/45 px-8 py-3 text-sm font-medium tracking-[0.2em] text-[var(--ramkin-gold)] uppercase transition hover:border-[var(--ramkin-gold)] hover:bg-white/5"
+                >
+                  {t('login')}
+                </Link>
+              </>
+            )}
+          </div>
+
+          {fakeOtp && !user ? (
+            <p
+              className="animate-fade-up mt-8 max-w-sm border border-amber-500/30 bg-amber-950/40 px-4 py-3 text-xs leading-relaxed text-amber-100/85"
+              style={{ animationDelay: '340ms' }}
+            >
+              {t('fakeOtpTip', { code: DEV_FAKE_OTP_CODE })}
+            </p>
+          ) : null}
+        </div>
+      </div>
     </main>
   );
 }
