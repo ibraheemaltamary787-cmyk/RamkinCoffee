@@ -3,11 +3,15 @@
 import { z } from 'zod';
 import {
   COMBO_STATUSES,
+  PURCHASE_CHANNELS,
   REWARD_REQUEST_STATUSES,
   type ComboStatus,
+  type PurchaseChannel,
+  type PurchaseSource,
   type RewardRequestStatus,
   type Role,
   type UserStatus,
+  type VerificationStatus,
 } from './constants';
 
 export const STAFF_INVITE_STATUSES = ['pending', 'accepted', 'cancelled', 'expired'] as const;
@@ -51,6 +55,10 @@ export interface PurchaseListItemDto {
   amount: number | null;
   note: string | null;
   createdAt: string | null;
+  channel: PurchaseChannel | null;
+  orderRef: string | null;
+  verificationStatus: VerificationStatus | null;
+  source: PurchaseSource | null;
 }
 
 export interface CustomerDetailDto {
@@ -126,6 +134,8 @@ export const getCustomerDetailSchema = z.object({
 export const listPurchasesSchema = z.object({
   customerId: z.string().min(1).optional(),
   recordedBy: z.string().min(1).optional(),
+  /** Optional channel filter (admin UI deferred; schema ready). */
+  channel: z.enum(PURCHASE_CHANNELS).optional(),
   /** Inclusive ISO date (`YYYY-MM-DD`) or datetime string. */
   from: z
     .string()

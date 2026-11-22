@@ -15,6 +15,8 @@ export const listPurchases = onCall({ cors: true }, async (request) => {
     query = query.where('customerId', '==', input.customerId);
   } else if (input.recordedBy) {
     query = query.where('recordedBy', '==', input.recordedBy);
+  } else if (input.channel) {
+    query = query.where('channel', '==', input.channel);
   }
 
   try {
@@ -59,6 +61,11 @@ export const listPurchases = onCall({ cors: true }, async (request) => {
       amount: typeof data.amount === 'number' ? data.amount : null,
       note: (data.note as string | null | undefined) ?? null,
       createdAt: toIso(data.createdAt as Timestamp | undefined),
+      channel: (data.channel as PurchaseListItemDto['channel'] | undefined) ?? null,
+      orderRef: (data.orderRef as string | null | undefined) ?? null,
+      verificationStatus:
+        (data.verificationStatus as PurchaseListItemDto['verificationStatus'] | undefined) ?? null,
+      source: (data.source as PurchaseListItemDto['source'] | undefined) ?? null,
     });
   }
 

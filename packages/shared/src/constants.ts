@@ -25,6 +25,21 @@ export type RewardRequestStatus = (typeof REWARD_REQUEST_STATUSES)[number];
 /** Default paid stamps before free drink (buy 9 → 10th free). */
 export const DEFAULT_PURCHASES_REQUIRED = 9;
 
+/** Where the eligible purchase happened. */
+export const PURCHASE_CHANNELS = ['online', 'in_store'] as const;
+export type PurchaseChannel = (typeof PURCHASE_CHANNELS)[number];
+
+/** Staff / system verification of an eligible purchase. */
+export const VERIFICATION_STATUSES = ['verified', 'pending', 'rejected'] as const;
+export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number];
+
+/** How the purchase was ingested into RAMKIN. */
+export const PURCHASE_SOURCES = ['counter', 'foodics_webhook'] as const;
+export type PurchaseSource = (typeof PURCHASE_SOURCES)[number];
+
+/** Official Foodics online menu (Order Online opens this; no API sync invented). */
+export const FOODICS_MENU_URL = 'https://ramkin.foodics.online/menu/-289360';
+
 export const BRAND = {
   name: 'RAMKIN',
   product: 'RAMKIN Coffee',

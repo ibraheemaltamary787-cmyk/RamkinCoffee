@@ -16,8 +16,10 @@ import {
   LoyaltyTransitionError,
   lookupCustomerByPhoneSchema,
   lookupCustomerByQrSchema,
+  normalizeOrderRef,
   normalizePhone,
   progressPercent,
+  recordPurchaseSchema,
   rejectRewardSchema,
   simulateFullLoyaltyCycle,
   stampsRemaining,
@@ -311,5 +313,25 @@ describe('loyalty input schemas', () => {
       rejectRewardSchema.parse({ requestId: 'r1', reason: 'Duplicate claim' }).reason,
       'Duplicate claim',
     );
+  });
+
+  it('defaults purchase channel/source and accepts orderRef', () => {
+    const parsed = recordPurchaseSchema.parse({
+      customerId: 'cust-1',
+      idempotencyKey: 'staff-key-12345678',
+      channel: 'online',
+      orderRef: 'FDX-99102',
+    });
+    assert.equal(parsed.channel, 'online');
+    assert.equal(parsed.orderRef, 'FDX-99102');
+    assert.equal(parsed.verificationStatus, 'verified');
+    assert.equal(parsed.source, 'counter');
+    assert.equal(normalizeOrderRef(' FDX-99102 '), 'fdx-99102');
+    assert.equal(normalizeOrderRef(null), null);
+    const defaults = recordPurchaseSchema.parse({
+      customerId: 'cust-1',
+      idempotencyKey: 'staff-key-87654321',
+    });
+    assert.equal(defaults.channel, 'in_store');
   });
 });
