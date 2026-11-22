@@ -6,7 +6,13 @@ import {
   signInWithPhoneNumber,
   type ConfirmationResult,
 } from 'firebase/auth';
-import { BRAND, DEV_FAKE_OTP_CODE, isE164Phone, toE164Phone } from '@ramkin/shared';
+import {
+  BRAND,
+  DEV_FAKE_OTP_CODE,
+  formatFirebaseCallableError,
+  isE164Phone,
+  toE164Phone,
+} from '@ramkin/shared';
 import { BrandMark } from '../components/BrandMark';
 import { LanguageSwitch } from '../components/LanguageSwitch';
 import { useAuth } from '../auth/AuthContext';
@@ -137,11 +143,14 @@ export function PhoneAuthPage({ mode }: PhoneAuthPageProps) {
               otp: code.trim(),
             },
       );
+      if (mode === 'register' && !displayName.trim()) {
+        throw new Error('Enter your name to register.');
+      }
       await signInWithCustomToken(getFirebaseAuth(), result.customToken);
       await ensureProfile(mode === 'register' ? displayName.trim() : undefined);
       navigate('/home', { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid code or profile setup failed.');
+      setError(formatFirebaseCallableError(err, 'Invalid code or profile setup failed.'));
     } finally {
       setBusy(false);
     }
