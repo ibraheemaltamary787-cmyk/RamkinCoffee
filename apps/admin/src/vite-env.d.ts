@@ -10,6 +10,8 @@ interface ImportMetaEnv {
   /** Public reCAPTCHA v3 site key after App Check Console enrollment. */
   readonly VITE_FIREBASE_APPCHECK_SITE_KEY?: string;
   readonly VITE_USE_FIREBASE_EMULATORS?: string;
+  /** DEV ONLY — Fake OTP 0000. Must stay unset/false in production builds. */
+  readonly VITE_DEV_FAKE_OTP?: string;
 }
 
 interface ImportMeta {

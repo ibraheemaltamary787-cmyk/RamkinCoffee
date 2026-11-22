@@ -88,6 +88,29 @@ export const recordPurchaseSchema = z.object({
   clientRequestId: z.string().trim().max(128).nullable().optional(),
 });
 
+/** Customer self-service history (own purchases / rewards only). */
+export const listMyHistorySchema = z.object({
+  limit: z.number().int().min(1).max(50).optional().default(30),
+});
+
+export interface MyPurchaseDto {
+  purchaseId: string;
+  comboId: string;
+  amount: number | null;
+  note: string | null;
+  createdAt: string | null;
+}
+
+export interface MyRewardRequestDto {
+  requestId: string;
+  comboId: string;
+  status: RewardRequestStatus;
+  rejectedReason: string | null;
+  requestedAt: string | null;
+  reviewedAt: string | null;
+  redeemedAt: string | null;
+}
+
 export const lookupCustomerByPhoneSchema = z.object({
   phone: z
     .string()
@@ -124,6 +147,7 @@ export const updateLoyaltySettingsSchema = z.object({
 });
 
 export type RecordPurchaseInput = z.infer<typeof recordPurchaseSchema>;
+export type ListMyHistoryInput = z.input<typeof listMyHistorySchema>;
 export type LookupCustomerByPhoneInput = z.infer<typeof lookupCustomerByPhoneSchema>;
 export type LookupCustomerByQrInput = z.infer<typeof lookupCustomerByQrSchema>;
 export type RequestRewardInput = z.infer<typeof requestRewardSchema>;

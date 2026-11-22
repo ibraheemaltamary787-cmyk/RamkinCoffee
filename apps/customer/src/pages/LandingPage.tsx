@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
-import { BRAND } from '@ramkin/shared';
+import { BRAND, DEV_FAKE_OTP_CODE } from '@ramkin/shared';
 import { BrandMark } from '../components/BrandMark';
 import { useAuth } from '../auth/AuthContext';
+import { isDevFakeOtpEnabled } from '../services/devFakeOtp';
 import { isUsingFirebaseEmulators } from '../services/firebase';
 
 export function LandingPage() {
   const { user } = useAuth();
   const usingEmulators = isUsingFirebaseEmulators();
+  const fakeOtp = isDevFakeOtpEnabled();
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-5 py-16 text-center sm:px-6">
@@ -76,7 +78,15 @@ export function LandingPage() {
         )}
       </div>
 
-      {usingEmulators && !user ? (
+      {fakeOtp && !user ? (
+        <p
+          className="animate-fade-up relative mt-8 max-w-sm border border-amber-500/30 bg-amber-950/40 px-4 py-3 text-xs leading-relaxed text-amber-100/85"
+          style={{ animationDelay: '360ms' }}
+        >
+          DEV Fake OTP mode: register or sign in with your mobile, then enter{' '}
+          <strong>{DEV_FAKE_OTP_CODE}</strong>. No SMS. Production builds reject this.
+        </p>
+      ) : usingEmulators && !user ? (
         <p
           className="animate-fade-up relative mt-8 max-w-sm text-xs leading-relaxed text-[var(--ramkin-mist)]/40"
           style={{ animationDelay: '360ms' }}

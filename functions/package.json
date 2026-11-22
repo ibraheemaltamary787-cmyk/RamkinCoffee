@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test src/hello.test.ts src/auth/claims.test.ts src/loyalty/engine.test.ts src/reports/exportBuilders.test.ts src/security/appCheck.test.ts src/security/config.test.ts",
+    "test": "tsx --test src/hello.test.ts src/auth/claims.test.ts src/auth/devFakeOtp.test.ts src/loyalty/engine.test.ts src/reports/exportBuilders.test.ts src/security/appCheck.test.ts src/security/config.test.ts",
     "serve": "npm run build && firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions"
   },

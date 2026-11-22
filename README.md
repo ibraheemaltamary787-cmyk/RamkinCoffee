@@ -46,6 +46,8 @@ cp .env.example apps/admin/.env
 | `npm run emulators:all`     | Same + Hosting emulator (local only — not production publish)   |
 | `npm run seed:emulator`     | Seed loyalty demo against Auth/Firestore emulators              |
 | `npm run seed:emulator:dry` | Print seed plan (no writes)                                     |
+| `npm run seed:dev-accounts` | Seed Fake OTP test roles (`@ramkin.local` + phones, OTP `0000`) |
+| `npm run seed:dev-accounts:dry` | Print Fake OTP seed plan (no writes)                        |
 | `npm run dev:customer`      | Customer app on http://localhost:5173                           |
 | `npm run dev:admin`         | Admin app on http://localhost:5174                              |
 | `npm run build`             | Build shared → apps → functions                                 |
@@ -56,7 +58,7 @@ cp .env.example apps/admin/.env
 | `npm test`                  | Unit tests (loyalty, RBAC, security hygiene)                    |
 | `npm run format`            | Prettier write                                                  |
 
-**Spark keep-free local stack:** copy `.env.example` → each app `.env` (includes `VITE_USE_FIREBASE_EMULATORS=true`), copy `functions/.secret.local.example` → `functions/.secret.local`, then `npm run emulators` + `dev:customer` / `dev:admin`. Exact steps: [`docs/FIREBASE_EMULATOR_DEV.md`](docs/FIREBASE_EMULATOR_DEV.md).
+**Spark keep-free local stack:** copy `.env.example` → each app `.env` (includes `VITE_USE_FIREBASE_EMULATORS=true` and `VITE_DEV_FAKE_OTP=true`), copy `functions/.secret.local.example` → `functions/.secret.local`, then `npm run emulators` → `npm run seed:dev-accounts` → `dev:customer` / `dev:admin`. Fake OTP code is **`0000`** (DEV only — production builds reject it). Exact steps: [`docs/FIREBASE_EMULATOR_DEV.md`](docs/FIREBASE_EMULATOR_DEV.md) · [`docs/LOCAL_TESTING_GUIDE.md`](docs/LOCAL_TESTING_GUIDE.md) · [`docs/TEST_ACCOUNTS.md`](docs/TEST_ACCOUNTS.md).
 
 ## Phase 8 — Production launch prep (docs + ops)
 

@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
+import { DevOtpBanner } from './components/DevOtpBanner';
 import { EmulatorBanner } from './components/EmulatorBanner';
 import { RequireStaff } from './components/RequireStaff';
 import { RequireSignedIn } from './components/RequireSignedIn';
@@ -21,6 +22,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <DevOtpBanner />
         <EmulatorBanner />
         <Routes>
           <Route path="/login" element={<LoginPage />} />

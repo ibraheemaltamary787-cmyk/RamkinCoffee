@@ -7,6 +7,7 @@ export * from './constants';
 export * from './loyalty';
 export * from './admin';
 export * from './reports';
+export * from './devFakeOtp';
 
 export interface LoyaltySettings {
   purchasesRequired: number;
