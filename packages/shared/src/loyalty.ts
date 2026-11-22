@@ -100,7 +100,7 @@ export const recordPurchaseSchema = z.object({
     .trim()
     .min(1)
     .max(128)
-    .regex(/^[A-Za-z0-9._:#/\-]+$/, 'orderRef has invalid characters')
+    .regex(/^[A-Za-z0-9._:#/-]+$/, 'orderRef has invalid characters')
     .nullable()
     .optional(),
   verificationStatus: z.enum(VERIFICATION_STATUSES).optional().default('verified'),
