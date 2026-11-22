@@ -65,4 +65,14 @@ describe('admin schemas', () => {
     });
     assert.equal(parsed.limit, 20);
   });
+
+  it('parses listPurchases channel and verification filters', () => {
+    const parsed = listPurchasesSchema.parse({
+      channel: 'online',
+      verificationStatus: 'pending',
+      limit: 10,
+    });
+    assert.equal(parsed.channel, 'online');
+    assert.equal(parsed.verificationStatus, 'pending');
+  });
 });

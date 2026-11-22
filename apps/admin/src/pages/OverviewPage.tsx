@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { canViewReports, type AdminStatsDto } from '@ramkin/shared';
 import { useAuth } from '../auth/AuthContext';
+import { useLocale } from '../i18n/LocaleContext';
 import { callGetAdminStats } from '../services/callables';
 
 function Stat({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
@@ -23,6 +24,7 @@ function Stat({ label, value, hint }: { label: string; value: string | number; h
 
 export function OverviewPage() {
   const { role } = useAuth();
+  const { t } = useLocale();
   const [stats, setStats] = useState<AdminStatsDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,11 +35,11 @@ export function OverviewPage() {
       const result = await callGetAdminStats();
       setStats(result.stats);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load stats.');
+      setError(err instanceof Error ? err.message : t('overviewLoadError'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void refresh();
@@ -51,11 +53,10 @@ export function OverviewPage() {
             className="text-3xl tracking-[0.1em] text-[var(--ramkin-gold)]"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            Operations
+            {t('overviewTitle')}
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--ramkin-mist)]/65">
-            Live shop overview for {role}. Counts come from Cloud Functions — no Firebase console
-            required for day-to-day ops.
+            {t('overviewSub', { role: role ?? '—' })}
           </p>
         </div>
         <button
@@ -66,29 +67,33 @@ export function OverviewPage() {
           }}
           className="border border-white/15 px-3 py-2 text-xs tracking-[0.18em] uppercase hover:border-[var(--ramkin-gold)]/40"
         >
-          Refresh
+          {t('refresh')}
         </button>
       </div>
 
       {error ? <p className="mt-4 text-sm text-red-300/90">{error}</p> : null}
       {loading && !stats ? (
-        <p className="mt-8 text-sm text-[var(--ramkin-mist)]/45">Loading stats…</p>
+        <p className="mt-8 text-sm text-[var(--ramkin-mist)]/45">{t('overviewLoading')}</p>
       ) : null}
 
       {stats ? (
         <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Customers" value={stats.totalCustomers} />
+          <Stat label={t('statCustomers')} value={stats.totalCustomers} />
           <Stat
-            label="Purchases"
+            label={t('statPurchases')}
             value={stats.totalPurchases}
-            hint={`${stats.purchasesToday} today`}
+            hint={t('statPurchasesToday', { n: stats.purchasesToday })}
           />
-          <Stat label="Active combos" value={stats.combosActive} />
-          <Stat label="Completed combos" value={stats.combosCompleted} hint="Awaiting request" />
-          <Stat label="Reward requested" value={stats.rewardRequested} />
-          <Stat label="Reward approved" value={stats.rewardApproved} />
-          <Stat label="Reward rejected" value={stats.rewardRejected} />
-          <Stat label="Reward redeemed" value={stats.rewardRedeemed} />
+          <Stat label={t('statActiveCombos')} value={stats.combosActive} />
+          <Stat
+            label={t('statCompletedCombos')}
+            value={stats.combosCompleted}
+            hint={t('statCompletedHint')}
+          />
+          <Stat label={t('statRewardRequested')} value={stats.rewardRequested} />
+          <Stat label={t('statRewardApproved')} value={stats.rewardApproved} />
+          <Stat label={t('statRewardRejected')} value={stats.rewardRejected} />
+          <Stat label={t('statRewardRedeemed')} value={stats.rewardRedeemed} />
         </dl>
       ) : null}
 
@@ -98,27 +103,27 @@ export function OverviewPage() {
           className="border border-white/10 bg-black/30 p-4 transition hover:border-[var(--ramkin-gold)]/40"
         >
           <p className="text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
-            Counter
+            {t('quickCounter')}
           </p>
-          <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">Lookup · stamp · redeem →</p>
+          <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">{t('quickCounterHint')}</p>
         </Link>
         <Link
           to="/app/rewards"
           className="border border-white/10 bg-black/30 p-4 transition hover:border-[var(--ramkin-gold)]/40"
         >
           <p className="text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
-            Rewards
+            {t('quickRewards')}
           </p>
-          <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">Approve · reject · redeem →</p>
+          <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">{t('quickRewardsHint')}</p>
         </Link>
         <Link
           to="/app/customers"
           className="border border-white/10 bg-black/30 p-4 transition hover:border-[var(--ramkin-gold)]/40"
         >
           <p className="text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
-            Customers
+            {t('quickCustomers')}
           </p>
-          <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">Search · history →</p>
+          <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">{t('quickCustomersHint')}</p>
         </Link>
         {canViewReports(role) ? (
           <Link
@@ -126,9 +131,9 @@ export function OverviewPage() {
             className="border border-white/10 bg-black/30 p-4 transition hover:border-[var(--ramkin-gold)]/40"
           >
             <p className="text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
-              Reports
+              {t('quickReports')}
             </p>
-            <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">Excel · PDF · print →</p>
+            <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">{t('quickReportsHint')}</p>
           </Link>
         ) : null}
       </div>

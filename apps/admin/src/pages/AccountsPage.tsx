@@ -7,6 +7,7 @@ import {
   type StaffMemberDto,
 } from '@ramkin/shared';
 import { useAuth } from '../auth/AuthContext';
+import { useLocale } from '../i18n/LocaleContext';
 import {
   callCancelStaffInvite,
   callCreateStaffInvite,
@@ -18,6 +19,7 @@ import {
 
 export function AccountsPage() {
   const { role, refreshClaims } = useAuth();
+  const { t } = useLocale();
   const [staff, setStaff] = useState<StaffMemberDto[]>([]);
   const [invites, setInvites] = useState<StaffInviteDto[]>([]);
   const [staffUid, setStaffUid] = useState('');
@@ -37,9 +39,9 @@ export function AccountsPage() {
       setStaff(staffResult.staff);
       setInvites(inviteResult.invites);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load staff.');
+      setError(err instanceof Error ? err.message : t('accountsLoadError'));
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void refresh();
@@ -53,7 +55,7 @@ export function AccountsPage() {
       await action();
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Action failed.');
+      setError(err instanceof Error ? err.message : t('accountsActionFailed'));
     } finally {
       setBusy(false);
     }
@@ -66,19 +68,18 @@ export function AccountsPage() {
           className="text-3xl tracking-[0.1em] text-[var(--ramkin-gold)]"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          Staff
+          {t('accountsTitle')}
         </h1>
         <p className="mt-2 text-sm text-[var(--ramkin-mist)]/60">
-          OWNER assigns roles and invites managers. MANAGER may invite STAFF and disable accounts.
-          Server callables enforce RBAC.
+          {t('accountsSub')}
         </p>
       </div>
 
       <div>
-        <h2 className="text-sm tracking-[0.2em] text-[var(--ramkin-gold-soft)] uppercase">Team</h2>
+        <h2 className="text-sm tracking-[0.2em] text-[var(--ramkin-gold-soft)] uppercase">{t('accountsMembers')}</h2>
         <ul className="mt-3 divide-y divide-white/10 border border-white/10 bg-black/25">
           {staff.length === 0 ? (
-            <li className="p-4 text-sm text-[var(--ramkin-mist)]/50">No staff loaded.</li>
+            <li className="p-4 text-sm text-[var(--ramkin-mist)]/50">{t('accountsNoStaff')}</li>
           ) : (
             staff.map((member) => (
               <li
@@ -114,7 +115,7 @@ export function AccountsPage() {
                       }
                       className="border border-red-400/50 px-2 py-1 text-[10px] tracking-[0.15em] text-red-200 uppercase"
                     >
-                      Disable
+                      {t('accountsDisable')}
                     </button>
                   ) : null}
                 </div>
@@ -140,7 +141,7 @@ export function AccountsPage() {
           className="max-w-lg space-y-3 border border-white/10 bg-black/30 p-5"
         >
           <h2 className="text-sm tracking-[0.2em] text-[var(--ramkin-gold-soft)] uppercase">
-            Invite staff
+            {t('accountsInviteStaff')}
           </h2>
           <input
             type="email"
@@ -165,21 +166,21 @@ export function AccountsPage() {
             disabled={busy || !canCreateStaffInvite(role, inviteRole)}
             className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] px-4 py-2 text-xs tracking-[0.2em] text-black uppercase disabled:opacity-60"
           >
-            Create invite
+            {t('accountsCreateInvite')}
           </button>
           <p className="text-xs text-[var(--ramkin-mist)]/40">
-            Invitee signs in with email/password, then accepts the invite from Login or Bootstrap.
+            {t('accountsInviteHint')}
           </p>
         </form>
       )}
 
       <div>
         <h2 className="text-sm tracking-[0.2em] text-[var(--ramkin-gold-soft)] uppercase">
-          Pending invites
+          {t('accountsInvites')}
         </h2>
         <ul className="mt-3 divide-y divide-white/10 border border-white/10">
           {invites.length === 0 ? (
-            <li className="p-3 text-sm text-[var(--ramkin-mist)]/45">No pending invites.</li>
+            <li className="p-3 text-sm text-[var(--ramkin-mist)]/45">{t('accountsNoInvites')}</li>
           ) : (
             invites.map((invite) => (
               <li
@@ -205,7 +206,7 @@ export function AccountsPage() {
                   }
                   className="border border-white/20 px-2 py-1 text-[10px] tracking-[0.15em] uppercase"
                 >
-                  Cancel
+                  {t('accountsCancelInvite')}
                 </button>
               </li>
             ))
@@ -232,12 +233,12 @@ export function AccountsPage() {
           className="max-w-lg space-y-3 border border-white/10 bg-black/30 p-5"
         >
           <h2 className="text-sm tracking-[0.2em] text-[var(--ramkin-gold-soft)] uppercase">
-            Set staff role by UID
+            {t('accountsSetRoleByUid')}
           </h2>
           <input
             value={staffUid}
             onChange={(e) => setStaffUid(e.target.value)}
-            placeholder="Auth UID"
+            placeholder={t('accountsUidPlaceholder')}
             className="w-full border border-[var(--ramkin-gold)]/30 bg-black/40 px-3 py-2 text-sm outline-none focus:border-[var(--ramkin-gold)]"
             required
           />
@@ -254,7 +255,7 @@ export function AccountsPage() {
             disabled={busy}
             className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] px-4 py-2 text-xs tracking-[0.2em] text-black uppercase disabled:opacity-60"
           >
-            Assign role
+            {t('accountsAssignRole')}
           </button>
         </form>
       )}

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ActivityLogDto } from '@ramkin/shared';
+import { useLocale } from '../i18n/LocaleContext';
 import { callListActivityLogs } from '../services/callables';
 
 export function ActivityLogsPage() {
+  const { t, locale } = useLocale();
   const [actorUid, setActorUid] = useState('');
   const [action, setAction] = useState('');
   const [logs, setLogs] = useState<ActivityLogDto[]>([]);
@@ -20,11 +22,11 @@ export function ActivityLogsPage() {
       });
       setLogs(result.logs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load activity logs.');
+      setError(err instanceof Error ? err.message : t('activityLoadError'));
     } finally {
       setBusy(false);
     }
-  }, [actorUid, action]);
+  }, [actorUid, action, t]);
 
   useEffect(() => {
     void refresh();
@@ -37,11 +39,9 @@ export function ActivityLogsPage() {
         className="text-3xl tracking-[0.1em] text-[var(--ramkin-gold)]"
         style={{ fontFamily: 'var(--font-display)' }}
       >
-        Activity logs
+        {t('activityTitle')}
       </h1>
-      <p className="mt-2 text-sm text-[var(--ramkin-mist)]/60">
-        Audit trail for OWNER and MANAGER. Append-only — written by Cloud Functions only.
-      </p>
+      <p className="mt-2 text-sm text-[var(--ramkin-mist)]/60">{t('activitySub')}</p>
 
       <form
         onSubmit={(e) => {
@@ -53,13 +53,13 @@ export function ActivityLogsPage() {
         <input
           value={actorUid}
           onChange={(e) => setActorUid(e.target.value)}
-          placeholder="Actor UID"
+          placeholder={t('activityActorUid')}
           className="min-w-[12rem] flex-1 border border-white/15 bg-black/40 px-3 py-2 text-sm outline-none focus:border-[var(--ramkin-gold)]/50"
         />
         <input
           value={action}
           onChange={(e) => setAction(e.target.value)}
-          placeholder="Action e.g. purchase.recorded"
+          placeholder={t('activityActionPlaceholder')}
           className="min-w-[12rem] flex-1 border border-white/15 bg-black/40 px-3 py-2 text-sm outline-none focus:border-[var(--ramkin-gold)]/50"
         />
         <button
@@ -67,7 +67,7 @@ export function ActivityLogsPage() {
           disabled={busy}
           className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)]/10 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-gold)] uppercase disabled:opacity-50"
         >
-          {busy ? 'Loading…' : 'Filter'}
+          {busy ? t('loading') : t('filter')}
         </button>
       </form>
 
@@ -75,17 +75,16 @@ export function ActivityLogsPage() {
 
       <ul className="mt-6 divide-y divide-white/10 border border-white/10 bg-black/25">
         {logs.length === 0 ? (
-          <li className="p-4 text-sm text-[var(--ramkin-mist)]/50">No logs found.</li>
+          <li className="p-4 text-sm text-[var(--ramkin-mist)]/50">{t('activityEmpty')}</li>
         ) : (
           logs.map((log) => (
-            <li key={log.logId} className="px-4 py-3">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="text-sm text-[var(--ramkin-gold)]">{log.action}</p>
-                <p className="text-xs text-[var(--ramkin-mist)]/40">{log.createdAt ?? '—'}</p>
-              </div>
-              <p className="mt-1 text-xs text-[var(--ramkin-mist)]/55">
-                {log.actorRole} · {log.actorUid.slice(0, 10)}… · {log.entityType}/
-                {log.entityId.slice(0, 10)}
+            <li key={log.logId} className="px-4 py-3 text-sm">
+              <p className="text-[var(--ramkin-gold-soft)]/80">{log.action}</p>
+              <p className="mt-1 text-xs text-[var(--ramkin-mist)]/45">
+                {log.actorRole} · {log.actorUid.slice(0, 8)}… · {log.entityType}/{log.entityId}
+                {log.createdAt
+                  ? ` · ${new Date(log.createdAt).toLocaleString(locale === 'ar' ? 'ar' : 'en')}`
+                  : ''}
               </p>
             </li>
           ))

@@ -8,6 +8,7 @@ import {
   type ReportSummaryDto,
 } from '@ramkin/shared';
 import { useAuth } from '../auth/AuthContext';
+import { useLocale } from '../i18n/LocaleContext';
 import { callExportReport } from '../services/callables';
 
 function downloadBase64File(fileName: string, mimeType: string, contentBase64: string): void {
@@ -25,14 +26,16 @@ function downloadBase64File(fileName: string, mimeType: string, contentBase64: s
   URL.revokeObjectURL(url);
 }
 
-const SHEET_OPTIONS: { id: ReportSheet; label: string }[] = [
-  { id: 'customers', label: 'Customers' },
-  { id: 'purchases', label: 'Purchases' },
-  { id: 'rewards', label: 'Reward requests' },
-];
+const SHEET_OPTIONS: { id: ReportSheet; labelKey: 'reportsSheetCustomers' | 'reportsSheetPurchases' | 'reportsSheetRewards' }[] =
+  [
+    { id: 'customers', labelKey: 'reportsSheetCustomers' },
+    { id: 'purchases', labelKey: 'reportsSheetPurchases' },
+    { id: 'rewards', labelKey: 'reportsSheetRewards' },
+  ];
 
 export function ReportsPage() {
   const { role } = useAuth();
+  const { t } = useLocale();
   const allowed = canExportReports(role);
 
   const [from, setFrom] = useState('');
@@ -86,12 +89,12 @@ export function ReportsPage() {
         setLastSummary(result.summary);
         downloadBase64File(result.fileName, result.mimeType, result.contentBase64);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Export failed.');
+        setError(err instanceof Error ? err.message : t('reportsFailed'));
       } finally {
         setBusy(false);
       }
     },
-    [allowed, sheets, from, to, search, recordedBy, rewardStatus],
+    [allowed, sheets, from, to, search, recordedBy, rewardStatus, t],
   );
 
   if (!allowed) {
@@ -101,10 +104,10 @@ export function ReportsPage() {
           className="text-3xl tracking-[0.1em] text-[var(--ramkin-gold)]"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          Reports
+          {t('reportsTitle')}
         </h1>
         <p className="mt-3 text-sm text-[var(--ramkin-mist)]/60">
-          Excel and PDF exports are limited to OWNER and MANAGER.
+          {t('reportsNotAllowed')}
         </p>
       </section>
     );
@@ -117,11 +120,10 @@ export function ReportsPage() {
           className="text-3xl tracking-[0.1em] text-[var(--ramkin-gold)]"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          Reports
+          {t('reportsTitle')}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-[var(--ramkin-mist)]/60">
-          Filter loyalty data, download Excel (customers / purchases / reward requests), or a branded
-          PDF summary. Print uses the on-screen preview.
+          {t('reportsSub')}
         </p>
 
         <form
@@ -148,13 +150,13 @@ export function ReportsPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name / phone"
+            placeholder={t('reportsSearch')}
             className="border border-white/15 bg-black/40 px-3 py-2 text-sm outline-none focus:border-[var(--ramkin-gold)]/50"
           />
           <input
             value={recordedBy}
             onChange={(e) => setRecordedBy(e.target.value)}
-            placeholder="Recorded by UID"
+            placeholder={t('reportsRecordedBy')}
             className="border border-white/15 bg-black/40 px-3 py-2 text-sm outline-none focus:border-[var(--ramkin-gold)]/50"
           />
           <select
@@ -182,7 +184,7 @@ export function ReportsPage() {
                   onChange={() => toggleSheet(opt.id)}
                   className="accent-[var(--ramkin-gold)]"
                 />
-                {opt.label}
+                {t(opt.labelKey)}
               </label>
             ))}
           </div>
@@ -193,7 +195,7 @@ export function ReportsPage() {
               disabled={busy}
               className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)]/10 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-gold)] uppercase disabled:opacity-50"
             >
-              {busy ? 'Working…' : 'Preview'}
+              {busy ? t('reportsBusy') : t('reportsPreview')}
             </button>
             <button
               type="button"
@@ -201,7 +203,7 @@ export function ReportsPage() {
               onClick={() => void runExport('xlsx')}
               className="border border-white/20 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/80 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-50"
             >
-              Download Excel
+              {t('reportsExcel')}
             </button>
             <button
               type="button"
@@ -209,7 +211,7 @@ export function ReportsPage() {
               onClick={() => void runExport('pdf')}
               className="border border-white/20 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/80 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-50"
             >
-              Download PDF
+              {t('reportsPdf')}
             </button>
             <button
               type="button"
@@ -217,7 +219,7 @@ export function ReportsPage() {
               onClick={() => window.print()}
               className="border border-white/20 px-4 py-2 text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/80 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-50"
             >
-              Print preview
+              {t('reportsPrint')}
             </button>
           </div>
         </form>

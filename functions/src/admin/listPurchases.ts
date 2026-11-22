@@ -11,12 +11,16 @@ export const listPurchases = onCall({ cors: true }, async (request) => {
 
   let query: Query = db.collection('purchases');
 
+  // Prefer equality filters that have composite indexes. When both channel and
+  // verificationStatus are set, query one in Firestore and filter the other in memory.
   if (input.customerId) {
     query = query.where('customerId', '==', input.customerId);
   } else if (input.recordedBy) {
     query = query.where('recordedBy', '==', input.recordedBy);
   } else if (input.channel) {
     query = query.where('channel', '==', input.channel);
+  } else if (input.verificationStatus) {
+    query = query.where('verificationStatus', '==', input.verificationStatus);
   }
 
   try {
@@ -33,7 +37,11 @@ export const listPurchases = onCall({ cors: true }, async (request) => {
     );
   }
 
-  query = query.orderBy('createdAt', 'desc').limit(input.limit);
+  // Over-fetch slightly when a secondary equality filter is applied in memory.
+  const secondaryFilter =
+    Boolean(input.channel) && Boolean(input.verificationStatus) && !input.customerId && !input.recordedBy;
+  const fetchLimit = secondaryFilter ? Math.min(100, input.limit * 3) : input.limit;
+  query = query.orderBy('createdAt', 'desc').limit(fetchLimit);
 
   const snap = await query.get();
   const customerCache = new Map<string, { name: string | null; phone: string | null }>();
@@ -41,6 +49,9 @@ export const listPurchases = onCall({ cors: true }, async (request) => {
   const purchases: PurchaseListItemDto[] = [];
   for (const doc of snap.docs) {
     const data = doc.data();
+    if (input.channel && data.channel !== input.channel) continue;
+    if (input.verificationStatus && data.verificationStatus !== input.verificationStatus) continue;
+    if (purchases.length >= input.limit) break;
     const customerId = data.customerId as string;
     if (!customerCache.has(customerId)) {
       const customerSnap = await db.collection('customers').doc(customerId).get();

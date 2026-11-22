@@ -6,10 +6,16 @@
   --ramkin-gold: #d4af37;
   --ramkin-gold-soft: #e6c96a;
   --ramkin-mist: #e8e4dc;
+  --ramkin-coffee: #5c3016;
   --ramkin-line: rgba(212, 175, 55, 0.28);
-  --font-display: 'Syne', 'Avenir Next', 'Segoe UI', sans-serif;
-  --font-body: 'Manrope', 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-display: 'Cairo', 'Tajawal', 'Syne', 'Avenir Next', sans-serif;
+  --font-body: 'Tajawal', 'Cairo', 'Manrope', 'Avenir Next', sans-serif;
   --sidebar-width: 15.5rem;
+}
+
+html[lang='en'] {
+  --font-display: 'Syne', 'Cairo', 'Avenir Next', sans-serif;
+  --font-body: 'Manrope', 'Tajawal', 'Avenir Next', sans-serif;
 }
 
 *,
@@ -29,9 +35,10 @@ body {
   font-family: var(--font-body);
   color: var(--ramkin-mist);
   background:
-    radial-gradient(ellipse 70% 45% at 0% 0%, rgba(212, 175, 55, 0.12), transparent 50%),
-    radial-gradient(ellipse 40% 30% at 100% 80%, rgba(212, 175, 55, 0.05), transparent 50%),
-    linear-gradient(168deg, #030303 0%, #101010 48%, #070707 100%);
+    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(212, 175, 55, 0.16), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 0% 100%, rgba(92, 48, 22, 0.22), transparent 50%),
+    radial-gradient(ellipse 45% 35% at 100% 90%, rgba(212, 175, 55, 0.06), transparent 50%),
+    linear-gradient(168deg, #030303 0%, #12100c 48%, #070707 100%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
 }
@@ -39,7 +46,7 @@ body {
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -50,7 +57,7 @@ body {
 @keyframes gold-sheen {
   0%,
   100% {
-    opacity: 0.6;
+    opacity: 0.55;
   }
   50% {
     opacity: 1;
@@ -65,6 +72,13 @@ body {
   animation: gold-sheen 3.2s ease-in-out infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-gold-sheen {
+    animation: none !important;
+  }
+}
+
 input[type='date'] {
   color-scheme: dark;
 }
@@ -76,7 +90,7 @@ input[type='date'] {
 }
 
 .data-table th {
-  text-align: left;
+  text-align: start;
   font-size: 0.65rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -94,6 +108,26 @@ input[type='date'] {
 
 .data-table tbody tr:hover td {
   background: rgba(212, 175, 55, 0.04);
+}
+
+.admin-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.2rem 0.55rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--ramkin-mist) 70%, transparent);
+}
+
+.admin-chip--gold {
+  border-color: color-mix(in srgb, var(--ramkin-gold) 45%, transparent);
+  color: var(--ramkin-gold-soft);
+}
+
+.admin-chip--muted {
+  opacity: 0.7;
 }
 
 @media print {
@@ -117,7 +151,8 @@ input[type='date'] {
   }
 
   .customer-print-root,
-  .report-print-root {
+  .report-print-root,
+  .site-qr-print-root {
     animation: none !important;
   }
 }
