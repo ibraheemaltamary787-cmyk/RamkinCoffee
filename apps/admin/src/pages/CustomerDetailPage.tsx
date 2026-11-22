@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { canRotateCustomerQr, type CustomerDetailDto } from '@ramkin/shared';
 import { useAuth } from '../auth/AuthContext';
+import { useLocale } from '../i18n/LocaleContext';
 import { callGetCustomerDetail, callRotateCustomerQr } from '../services/callables';
 
 export function CustomerDetailPage() {
   const { customerId = '' } = useParams();
   const { role } = useAuth();
+  const { t } = useLocale();
   const [detail, setDetail] = useState<CustomerDetailDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,11 +22,11 @@ export function CustomerDetailPage() {
       const result = await callGetCustomerDetail({ customerId });
       setDetail(result.detail);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load customer.');
+      setError(err instanceof Error ? err.message : t('customerDetailLoadError'));
     } finally {
       setLoading(false);
     }
-  }, [customerId]);
+  }, [customerId, t]);
 
   useEffect(() => {
     void refresh();
@@ -33,7 +35,7 @@ export function CustomerDetailPage() {
   const onRotateQr = useCallback(async () => {
     if (!customerId || !canRotateCustomerQr(role)) return;
     const confirmed = window.confirm(
-      'Rotate this customer’s counter QR? Old printed codes and links will stop working immediately.',
+      t('customerDetailRotateConfirm'),
     );
     if (!confirmed) return;
     setRotating(true);
@@ -42,14 +44,14 @@ export function CustomerDetailPage() {
       await callRotateCustomerQr({ customerId });
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not rotate QR.');
+      setError(err instanceof Error ? err.message : t('customerDetailRotateFailed'));
     } finally {
       setRotating(false);
     }
-  }, [customerId, refresh, role]);
+  }, [customerId, refresh, role, t]);
 
   if (loading && !detail) {
-    return <p className="text-sm text-[var(--ramkin-mist)]/45">Loading customer…</p>;
+    return <p className="text-sm text-[var(--ramkin-mist)]/45">{t('customerDetailLoading')}</p>;
   }
 
   if (error && !detail) {
@@ -57,7 +59,7 @@ export function CustomerDetailPage() {
       <section>
         <p className="text-sm text-red-300/90">{error}</p>
         <Link to="/app/customers" className="mt-4 inline-block text-[var(--ramkin-gold)]">
-          ← Customers
+          {t('customerDetailBack')}
         </Link>
       </section>
     );
@@ -82,7 +84,7 @@ export function CustomerDetailPage() {
             onClick={() => window.print()}
             className="border border-white/20 px-3 py-1.5 text-[10px] tracking-[0.2em] text-[var(--ramkin-mist)]/70 uppercase hover:border-[var(--ramkin-gold)]/50"
           >
-            Print history
+            {t('print')}
           </button>
         </div>
         <header className="mt-3 flex items-center gap-4">
@@ -123,7 +125,7 @@ export function CustomerDetailPage() {
         </div>
         <div className="border border-white/10 bg-black/30 p-4 sm:col-span-2">
           <p className="text-[10px] tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
-            QR token
+            {t('customerDetailQrToken')}
           </p>
           <p className="mt-2 break-all font-mono text-xs text-[var(--ramkin-mist)]/70">
             {customer.qrToken || '—'}
@@ -133,7 +135,7 @@ export function CustomerDetailPage() {
               to={`/app/counter?qr=${encodeURIComponent(customer.qrToken)}`}
               className="text-xs tracking-[0.15em] text-[var(--ramkin-gold)] uppercase"
             >
-              Open at counter →
+              {t('customerDetailOpenCounter')}
             </Link>
             {mayRotate ? (
               <button
@@ -142,7 +144,7 @@ export function CustomerDetailPage() {
                 onClick={() => void onRotateQr()}
                 className="border border-white/20 px-3 py-1.5 text-[10px] tracking-[0.2em] text-[var(--ramkin-mist)]/70 uppercase hover:border-[var(--ramkin-gold)]/50 disabled:opacity-40"
               >
-                {rotating ? 'Rotating…' : 'Rotate QR'}
+                {rotating ? t('customerDetailRotating') : t('customerDetailRotate')}
               </button>
             ) : null}
           </div>
@@ -151,7 +153,7 @@ export function CustomerDetailPage() {
 
       <div>
         <h2 className="text-sm tracking-[0.2em] text-[var(--ramkin-gold-soft)] uppercase">
-          Purchases
+          {t('customerDetailPurchases')}
         </h2>
         <ul className="mt-3 divide-y divide-white/10 border border-white/10">
           {purchases.length === 0 ? (
@@ -177,7 +179,7 @@ export function CustomerDetailPage() {
 
       <div>
         <h2 className="text-sm tracking-[0.2em] text-[var(--ramkin-gold-soft)] uppercase">
-          Rewards
+          {t('customerDetailRewards')}
         </h2>
         <ul className="mt-3 divide-y divide-white/10 border border-white/10">
           {rewards.length === 0 ? (
@@ -203,7 +205,7 @@ export function CustomerDetailPage() {
 
       <div>
         <h2 className="text-sm tracking-[0.2em] text-[var(--ramkin-gold-soft)] uppercase">
-          Combos
+          {t('customerDetailCombos')}
         </h2>
         <ul className="mt-3 divide-y divide-white/10 border border-white/10">
           {combos.map((c) => (

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useLocale } from '../i18n/LocaleContext';
 import {
   callApproveReward,
   callListOpenRewards,
@@ -21,6 +22,7 @@ type OpenReward = {
 };
 
 export function RewardsPage() {
+  const { t, locale } = useLocale();
   const [filter, setFilter] = useState<'all' | 'requested' | 'approved'>('all');
   const [rewards, setRewards] = useState<OpenReward[]>([]);
   const [busy, setBusy] = useState(false);
@@ -33,9 +35,9 @@ export function RewardsPage() {
       const result = await callListOpenRewards(filter === 'all' ? undefined : filter);
       setRewards(result.rewards);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load rewards.');
+      setError(err instanceof Error ? err.message : t('rewardsLoadError'));
     }
-  }, [filter]);
+  }, [filter, t]);
 
   useEffect(() => {
     void refresh();
@@ -48,7 +50,7 @@ export function RewardsPage() {
       await action();
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Action failed.');
+      setError(err instanceof Error ? err.message : t('rewardsActionFailed'));
     } finally {
       setBusy(false);
     }
@@ -62,30 +64,27 @@ export function RewardsPage() {
             className="text-3xl tracking-[0.1em] text-[var(--ramkin-gold)]"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            Rewards queue
+            {t('rewardsTitle')}
           </h1>
-          <p className="mt-2 text-sm text-[var(--ramkin-mist)]/60">
-            Flow: requested → approve/reject → approved → confirm redeem (combo resets only on
-            redeem). STAFF approve/reject is gated by loyalty settings + server RBAC.
-          </p>
+          <p className="mt-2 text-sm text-[var(--ramkin-mist)]/60">{t('rewardsSub')}</p>
         </div>
         <button
           type="button"
           onClick={() => void refresh()}
           className="border border-white/15 px-3 py-2 text-xs tracking-[0.18em] uppercase hover:border-[var(--ramkin-gold)]/40"
         >
-          Refresh
+          {t('refresh')}
         </button>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {(
           [
-            ['all', 'Open'],
-            ['requested', 'Requested'],
-            ['approved', 'Approved'],
+            ['all', 'rewardsFilterOpen'],
+            ['requested', 'rewardsFilterRequested'],
+            ['approved', 'rewardsFilterApproved'],
           ] as const
-        ).map(([value, label]) => (
+        ).map(([value, key]) => (
           <button
             key={value}
             type="button"
@@ -96,7 +95,7 @@ export function RewardsPage() {
                 : 'border border-white/15 text-[var(--ramkin-mist)]/50'
             }`}
           >
-            {label}
+            {t(key)}
           </button>
         ))}
       </div>
@@ -106,7 +105,7 @@ export function RewardsPage() {
       <ul className="mt-8 space-y-4">
         {rewards.length === 0 ? (
           <li className="border border-white/10 bg-black/20 p-4 text-sm text-[var(--ramkin-mist)]/50">
-            No open reward requests.
+            {t('rewardsEmpty')}
           </li>
         ) : (
           rewards.map((reward) => (
@@ -117,14 +116,21 @@ export function RewardsPage() {
                     to={`/app/customers/${reward.customerId}`}
                     className="text-[var(--ramkin-mist)] hover:text-[var(--ramkin-gold)]"
                   >
-                    {reward.displayName ?? 'Customer'} · {reward.email ?? reward.phone ?? '—'}
+                    {reward.displayName ?? t('rewardsCustomer')} ·{' '}
+                    {reward.email ?? reward.phone ?? t('none')}
                   </Link>
                   <p className="mt-1 text-xs tracking-[0.15em] text-[var(--ramkin-gold-soft)]/70 uppercase">
-                    {reward.status} · {reward.purchaseCount}/{reward.requiredPurchases} stamps
+                    {reward.status} ·{' '}
+                    {t('rewardsStamps', {
+                      count: reward.purchaseCount,
+                      required: reward.requiredPurchases,
+                    })}
                     {reward.phone ? ` · ${reward.phone}` : ''}
                   </p>
                   <p className="mt-1 text-xs text-[var(--ramkin-mist)]/40">
-                    {reward.requestedAt ?? '—'}
+                    {reward.requestedAt
+                      ? new Date(reward.requestedAt).toLocaleString(locale === 'ar' ? 'ar' : 'en')
+                      : t('none')}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -138,7 +144,7 @@ export function RewardsPage() {
                         }
                         className="border border-[var(--ramkin-gold)]/60 px-3 py-1.5 text-xs tracking-[0.15em] text-[var(--ramkin-gold)] uppercase"
                       >
-                        Approve
+                        {t('rewardsApprove')}
                       </button>
                       <input
                         value={rejectReasons[reward.requestId] ?? ''}
@@ -148,7 +154,7 @@ export function RewardsPage() {
                             [reward.requestId]: e.target.value,
                           }))
                         }
-                        placeholder="Reason (required)"
+                        placeholder={t('rewardsRejectReason')}
                         className="border border-white/15 bg-black/40 px-2 py-1.5 text-sm outline-none"
                       />
                       <button
@@ -157,7 +163,7 @@ export function RewardsPage() {
                         onClick={() => {
                           const reason = (rejectReasons[reward.requestId] ?? '').trim();
                           if (reason.length < 3) {
-                            setError('Rejection reason required (min 3 characters).');
+                            setError(t('counterRejectReasonRequired'));
                             return;
                           }
                           void run(() =>
@@ -169,7 +175,7 @@ export function RewardsPage() {
                         }}
                         className="border border-white/20 px-3 py-1.5 text-xs tracking-[0.15em] uppercase"
                       >
-                        Reject
+                        {t('rewardsReject')}
                       </button>
                     </>
                   ) : null}
@@ -182,7 +188,7 @@ export function RewardsPage() {
                       }
                       className="border border-[var(--ramkin-gold)] px-3 py-1.5 text-xs tracking-[0.15em] text-[var(--ramkin-gold)] uppercase"
                     >
-                      Confirm redeem
+                      {t('rewardsConfirmRedeem')}
                     </button>
                   ) : null}
                 </div>

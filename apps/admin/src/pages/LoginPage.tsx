@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { BRAND, DEV_FAKE_OTP_CODE } from '@ramkin/shared';
 import { useAuth } from '../auth/AuthContext';
+import { LanguageSwitch } from '../components/LanguageSwitch';
+import { useLocale } from '../i18n/LocaleContext';
 import { callAcceptStaffInvite } from '../services/callables';
 import { isDevFakeOtpEnabled } from '../services/devFakeOtp';
 
 export function LoginPage() {
   const { configured, loading, user, isStaff, signIn, signInWithFakeOtp, refreshClaims } =
     useAuth();
+  const { t } = useLocale();
   const navigate = useNavigate();
   const fakeOtp = isDevFakeOtpEnabled();
   const [email, setEmail] = useState('');
@@ -27,7 +30,7 @@ export function LoginPage() {
     try {
       const result = await callAcceptStaffInvite({});
       await refreshClaims();
-      setInviteNote(`Invite accepted — role ${result.role}.`);
+      setInviteNote(t('loginInviteAccepted', { role: result.role }));
       return true;
     } catch {
       return false;
@@ -37,6 +40,9 @@ export function LoginPage() {
   if (!loading && user && !isStaff) {
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 py-12 text-center">
+        <div className="mb-6 flex justify-center">
+          <LanguageSwitch />
+        </div>
         <img
           src="/brand/ramkin-logo.jpg"
           alt=""
@@ -46,12 +52,9 @@ export function LoginPage() {
           className="text-xl text-[var(--ramkin-gold)]"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          Almost there
+          {t('loginAlmostThere')}
         </h1>
-        <p className="mt-3 text-sm text-[var(--ramkin-mist)]/65">
-          This account has no staff role yet. Accept a pending invite for your email, or complete
-          OWNER bootstrap.
-        </p>
+        <p className="mt-3 text-sm text-[var(--ramkin-mist)]/65">{t('loginNoStaffRole')}</p>
         <div className="mt-6 flex flex-col gap-3">
           <button
             type="button"
@@ -65,20 +68,20 @@ export function LoginPage() {
                 if (ok) {
                   navigate('/app', { replace: true });
                 } else {
-                  setError('No pending invite for this email.');
+                  setError(t('loginNoInvite'));
                 }
               })();
             }}
             className="border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] py-3 text-sm tracking-[0.2em] text-black uppercase disabled:opacity-60"
           >
-            Accept staff invite
+            {t('loginAcceptInvite')}
           </button>
           <button
             type="button"
             onClick={() => navigate('/bootstrap')}
             className="border border-white/20 py-3 text-sm tracking-[0.2em] uppercase"
           >
-            Go to bootstrap
+            {t('loginGoBootstrap')}
           </button>
         </div>
         {inviteNote ? (
@@ -104,9 +107,7 @@ export function LoginPage() {
     setError(null);
     try {
       if (!configured) {
-        setError(
-          'Firebase placeholders only. Copy .env.example → apps/admin/.env and fill VITE_FIREBASE_* from a new RAMKIN project (never hloe-45d43).',
-        );
+        setError(t('loginFirebaseMissing'));
         return;
       }
 
@@ -119,7 +120,7 @@ export function LoginPage() {
       const nextRole = await signIn(email, password);
       await finishStaffNav(nextRole);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign-in failed');
+      setError(err instanceof Error ? err.message : t('loginFailed'));
     } finally {
       setBusy(false);
     }
@@ -128,13 +129,16 @@ export function LoginPage() {
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 py-12">
       <div
-        className="pointer-events-none absolute inset-0 opacity-30"
+        className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           backgroundImage:
-            'radial-gradient(ellipse at 50% 0%, rgba(201,169,98,0.2), transparent 55%)',
+            'radial-gradient(ellipse at 50% 0%, rgba(212,175,55,0.22), transparent 55%), radial-gradient(ellipse at 10% 90%, rgba(92,48,22,0.25), transparent 45%)',
         }}
         aria-hidden
       />
+      <div className="relative mb-6 flex justify-end">
+        <LanguageSwitch />
+      </div>
       <div className="relative mb-8 text-center">
         <img
           src="/brand/ramkin-logo.jpg"
@@ -142,27 +146,25 @@ export function LoginPage() {
           className="mx-auto mb-4 h-16 w-16 rounded-full object-cover ring-1 ring-[var(--ramkin-gold)]/50"
         />
         <h1
-          className="text-3xl tracking-[0.18em] text-[var(--ramkin-gold)]"
+          className="text-3xl tracking-[0.18em] text-[var(--ramkin-gold)] animate-gold-sheen"
           style={{ fontFamily: 'var(--font-display)' }}
         >
           {BRAND.name}
         </h1>
         <p className="mt-2 text-xs tracking-[0.35em] text-[var(--ramkin-gold-soft)]/70 uppercase">
-          Staff &amp; Admin
+          {t('brandStaff')}
         </p>
       </div>
 
       {!configured ? (
         <p className="relative mb-4 border border-[var(--ramkin-gold)]/30 bg-black/40 px-4 py-3 text-sm text-[var(--ramkin-gold-soft)]">
-          Waiting on Firebase web config. Copy .env.example → apps/admin/.env (Email/Password is
-          enabled on Spark).
+          {t('loginWaitingConfig')}
         </p>
       ) : null}
 
       {fakeOtp && !usePassword ? (
         <p className="relative mb-4 border border-amber-500/35 bg-amber-950/50 px-4 py-3 text-xs leading-relaxed text-amber-100/90">
-          DEV Fake OTP: use seeded identifiers (e.g. <code>owner@ramkin.local</code>) and code{' '}
-          <strong>{DEV_FAKE_OTP_CODE}</strong>. Not available in production builds.
+          {t('loginFakeOtpHint', { code: DEV_FAKE_OTP_CODE })}
         </p>
       ) : null}
 
@@ -170,7 +172,7 @@ export function LoginPage() {
         {fakeOtp && !usePassword ? (
           <>
             <label className="block text-sm text-[var(--ramkin-mist)]/80">
-              Identifier
+              {t('loginIdentifier')}
               <input
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
@@ -181,7 +183,7 @@ export function LoginPage() {
               />
             </label>
             <label className="block text-sm text-[var(--ramkin-mist)]/80">
-              DEV OTP
+              {t('loginDevOtp')}
               <input
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
@@ -196,7 +198,7 @@ export function LoginPage() {
         ) : (
           <>
             <label className="block text-sm text-[var(--ramkin-mist)]/80">
-              Email
+              {t('email')}
               <input
                 type="email"
                 value={email}
@@ -207,7 +209,7 @@ export function LoginPage() {
               />
             </label>
             <label className="block text-sm text-[var(--ramkin-mist)]/80">
-              Password
+              {t('loginPassword')}
               <input
                 type="password"
                 value={password}
@@ -224,7 +226,7 @@ export function LoginPage() {
           disabled={busy}
           className="w-full border border-[var(--ramkin-gold)] bg-[var(--ramkin-gold)] py-3 text-sm tracking-[0.2em] text-black uppercase disabled:opacity-60"
         >
-          {busy ? 'Signing in…' : 'Sign in'}
+          {busy ? t('loginSigningIn') : t('loginSignIn')}
         </button>
       </form>
 
@@ -237,16 +239,14 @@ export function LoginPage() {
             setError(null);
           }}
         >
-          {usePassword ? 'Use DEV Fake OTP instead' : 'Use email / password instead'}
+          {usePassword ? t('loginUseFakeOtp') : t('loginUsePassword')}
         </button>
       ) : null}
 
       {error && <p className="relative mt-4 text-sm text-red-300">{error}</p>}
 
       <p className="relative mt-8 text-center text-xs leading-relaxed text-[var(--ramkin-mist)]/45">
-        {fakeOtp
-          ? 'Seed accounts with npm run seed:dev-accounts, then sign in with identifier + 0000. No Hosting publish / Blaze.'
-          : 'Emulator: add Email/Password user in Emulator UI (:4000), sign in here, then /bootstrap with functions/.secret.local. No Hosting publish / Blaze.'}
+        {fakeOtp ? t('loginFooterFake') : t('loginFooterEmulator')}
       </p>
     </main>
   );

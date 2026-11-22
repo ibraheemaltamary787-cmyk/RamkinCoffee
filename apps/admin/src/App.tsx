@@ -4,6 +4,7 @@ import { DevOtpBanner } from './components/DevOtpBanner';
 import { EmulatorBanner } from './components/EmulatorBanner';
 import { RequireStaff } from './components/RequireStaff';
 import { RequireSignedIn } from './components/RequireSignedIn';
+import { LocaleProvider } from './i18n/LocaleContext';
 import { LoginPage } from './pages/LoginPage';
 import { ShellLayout } from './pages/ShellLayout';
 import { OverviewPage } from './pages/OverviewPage';
@@ -20,11 +21,12 @@ import { ReportsPage } from './pages/ReportsPage';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <DevOtpBanner />
-        <EmulatorBanner />
-        <Routes>
+    <LocaleProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <DevOtpBanner />
+          <EmulatorBanner />
+          <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
             path="/bootstrap"
@@ -83,8 +85,9 @@ export default function App() {
           </Route>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </LocaleProvider>
   );
 }

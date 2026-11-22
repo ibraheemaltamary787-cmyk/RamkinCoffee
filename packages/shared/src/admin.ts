@@ -134,8 +134,10 @@ export const getCustomerDetailSchema = z.object({
 export const listPurchasesSchema = z.object({
   customerId: z.string().min(1).optional(),
   recordedBy: z.string().min(1).optional(),
-  /** Optional channel filter (admin UI deferred; schema ready). */
+  /** Optional channel filter (online / in_store). */
   channel: z.enum(PURCHASE_CHANNELS).optional(),
+  /** Optional verification filter (verified / pending / rejected). */
+  verificationStatus: z.enum(['verified', 'pending', 'rejected']).optional(),
   /** Inclusive ISO date (`YYYY-MM-DD`) or datetime string. */
   from: z
     .string()
