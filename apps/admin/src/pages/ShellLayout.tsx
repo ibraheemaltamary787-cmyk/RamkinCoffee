@@ -58,6 +58,11 @@ export function ShellLayout() {
           {t('navSettings')}
         </NavLink>
       ) : null}
+      {role === 'OWNER' ? (
+        <NavLink to="/app/qr" className={linkClass}>
+          {t('navQr')}
+        </NavLink>
+      ) : null}
       {canViewActivityLogs(role) ? (
         <NavLink to="/app/activity" className={linkClass}>
           {t('navActivity')}
