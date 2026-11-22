@@ -18,6 +18,7 @@ import { CustomerDetailPage } from './pages/CustomerDetailPage';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { ActivityLogsPage } from './pages/ActivityLogsPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { SiteQrPage } from './pages/SiteQrPage';
 
 export default function App() {
   return (
@@ -63,6 +64,14 @@ export default function App() {
               element={
                 <RequireStaff roles={['OWNER']}>
                   <SettingsPage />
+                </RequireStaff>
+              }
+            />
+            <Route
+              path="qr"
+              element={
+                <RequireStaff roles={['OWNER']}>
+                  <SiteQrPage />
                 </RequireStaff>
               }
             />

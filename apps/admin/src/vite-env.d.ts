@@ -12,6 +12,10 @@ interface ImportMetaEnv {
   readonly VITE_USE_FIREBASE_EMULATORS?: string;
   /** DEV ONLY — Fake OTP 0000. Must stay unset/false in production builds. */
   readonly VITE_DEV_FAKE_OTP?: string;
+  /** Optional absolute customer landing URL for site QR stickers. */
+  readonly VITE_QR_LANDING_URL?: string;
+  /** Optional customer app origin (local Vite / future prod). */
+  readonly VITE_CUSTOMER_URL?: string;
 }
 
 interface ImportMeta {

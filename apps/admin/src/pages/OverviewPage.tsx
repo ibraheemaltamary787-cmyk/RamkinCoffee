@@ -136,6 +136,17 @@ export function OverviewPage() {
             <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">{t('quickReportsHint')}</p>
           </Link>
         ) : null}
+        {role === 'OWNER' ? (
+          <Link
+            to="/app/qr"
+            className="border border-white/10 bg-black/30 p-4 transition hover:border-[var(--ramkin-gold)]/40"
+          >
+            <p className="text-xs tracking-[0.2em] text-[var(--ramkin-mist)]/45 uppercase">
+              {t('quickQr')}
+            </p>
+            <p className="mt-2 text-sm text-[var(--ramkin-gold-soft)]">{t('quickQrHint')}</p>
+          </Link>
+        ) : null}
       </div>
     </section>
   );
